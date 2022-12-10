@@ -55,8 +55,16 @@ impl<'a> Parser<'a> {
     }
 
     fn expr_prime(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+        //Optional whitespace
+        self.whitespace();
+
         //Handle in steps for each priority, starting with the step with the lowest priority to account for operator precedence
-        self.expr_2()
+        let result = self.expr_2();
+
+        //Optional whitespace
+        self.whitespace();
+
+        result
     }
 
     fn expr_2(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
@@ -74,6 +82,9 @@ impl<'a> Parser<'a> {
         let mut current_lah = self.lah;
 
         loop {
+            //Match optional whitespace
+            self.whitespace();
+
             //Check for binary infix operator with priority 2
             let binop_in_2_result = self.binop_in_2();
 
@@ -84,6 +95,9 @@ impl<'a> Parser<'a> {
             }
 
             let binop_in_2 = binop_in_2_result.unwrap();
+
+            //Match optional whitespace
+            self.whitespace();
 
             //Check for another expression of priority 1
             let expr_1_suffix_result = self.expr_1();
@@ -124,6 +138,9 @@ impl<'a> Parser<'a> {
         let mut current_lah = self.lah;
 
         loop {
+            //Match optional whitespace
+            self.whitespace();
+
             //Check for binary infix operator with priority 1
             let binop_in_1_result = self.binop_in_1();
 
@@ -134,6 +151,9 @@ impl<'a> Parser<'a> {
             }
 
             let binop_in_1 = binop_in_1_result.unwrap();
+
+            //Match optional whitespace
+            self.whitespace();
 
             //Check for another expression of priority 0
             let expr_0_suffix_result = self.expr_0();
@@ -174,6 +194,9 @@ impl<'a> Parser<'a> {
         let mut current_lah = self.lah;
 
         loop {
+            //Match optional whitespace
+            self.whitespace();
+
             //Check for binary infix operator with priority 0
             let binop_in_0_result = self.binop_in_0();
 
@@ -185,6 +208,9 @@ impl<'a> Parser<'a> {
 
             let binop_in_0 = binop_in_0_result.unwrap();
 
+            //Match optional whitespace
+            self.whitespace();
+            
             //Check for another expression of same priority
             let expr_0_suffix_result = self.expr_0();
 
@@ -336,6 +362,9 @@ impl<'a> Parser<'a> {
 
         let id = id_result.unwrap();
 
+        //Optional whitespace
+        self.whitespace();
+
         //Try to match an opening paren
         let token = self.get_and_increment();
 
@@ -344,6 +373,9 @@ impl<'a> Parser<'a> {
             self.lah = initial_lah;
             return Err(ParserErr::new(""));
         }
+
+        //Optional whitespace
+        self.whitespace();
 
         //Try to match function arguments
         let mut current_lah = self.lah;
@@ -365,8 +397,14 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            //Match expression
             self.lah = inner_lah;
+
+            //Match optional whitespace
+            self.whitespace();
+
+            //inner_lah = self.lah;
+
+            //Match expression
             let expr_prime_result = self.expr_prime();
 
             //Expression is required. Rollback lah and break from loop if not present.
@@ -376,6 +414,9 @@ impl<'a> Parser<'a> {
             }
             
             let expr_prime = expr_prime_result.unwrap();
+
+            //Optional whitespace
+            self.whitespace();
 
             //Match was success. Record progress in outer loop.
             current_lah = self.lah;
@@ -506,6 +547,9 @@ impl<'a> Parser<'a> {
             return Err(ParserErr::new(""));
         }
 
+        //Optional whitespace
+        self.whitespace();
+
         //Try to match the inner expression
         let expr_prime_result = self.expr_prime();
 
@@ -516,6 +560,9 @@ impl<'a> Parser<'a> {
         }
 
         let expr_prime = expr_prime_result.unwrap();
+
+        //Optional whitespace
+        self.whitespace();
 
         //Try to match a closing paren
         let token = self.get_and_increment();
@@ -660,5 +707,24 @@ impl<'a> Parser<'a> {
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
         Err(ParserErr::new(""))
+    }
+
+    fn whitespace(&mut self) {
+        let mut current_lah = self.lah;
+
+        let whitespace_terminal: &Terminal = &terminals::WHITESPACE;
+
+        loop {
+            let current_token = self.token_at(current_lah);
+
+            if whitespace_terminal.match_symbol(current_token) {
+                current_lah += 1;
+                continue;
+            }
+
+            break;
+        };      
+
+        self.lah = current_lah;
     }
 }
