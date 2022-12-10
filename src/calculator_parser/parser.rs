@@ -13,10 +13,10 @@ pub struct Parser<'a> {
 
 #[allow(clippy::question_mark)]
 impl<'a> Parser<'a> {
-    pub fn new(line: &'a String) -> Self {
+    pub fn new(line: &'a str) -> Self {
         Self {
             lah: 0,
-            tokens: line.graphemes(true)
+            tokens: line.trim().graphemes(true)
                 .collect()
         }
     }
@@ -30,7 +30,15 @@ impl<'a> Parser<'a> {
 
             match expression_result {
                 Err(err) => Err(err),
-                Ok(expr) => Ok(xpr::Expr::ExprPrime(Box::new(expr)))
+                Ok(expr) => {
+
+                    if self.lah < self.tokens.len() {
+                        Err(ParserErr::new(""))
+                    }
+                    else {
+                        Ok(xpr::Expr::ExprPrime(Box::new(expr)))
+                    }
+                }
             }
         }
     }
