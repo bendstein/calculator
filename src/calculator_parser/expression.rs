@@ -78,16 +78,45 @@ pub enum ExprPrime {
     Number(NumberToken),
     Func(Func),
     Id(IdToken),
-    UnopsExpression(Vec<UnopPrefix>, Box<ExprPrime>, Vec<UnopSuffix>),
+    UnopPrefixesExpression(Vec<UnopPrefix>, Box<ExprPrime>),
+    UnopSuffixesExpression(Box<ExprPrime>, Vec<UnopSuffix>),
     ParenthesesExpression(Box<ExprPrime>),
     BinaryInfixExpression(Box<ExprPrime>, Vec<(BinopInfix, Box<ExprPrime>)>)
 }
 
 impl Display for ExprPrime {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        fn subexpr_str(subexpr: &ExprPrime) -> String {
-            if !matches!(subexpr, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_)
-                    | ExprPrime::UnopsExpression(_, _, _)) {
+
+        enum SubexprStrParentType {
+            //None,
+            UnopPrefix,
+            UnopSuffix,
+            Parentheses,
+            BinaryInfix
+        }
+
+        fn subexpr_str(subexpr: &ExprPrime, _parent_type: SubexprStrParentType) -> String {
+            if !matches!(subexpr, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_)) {
+
+                // match parent_type {
+                //     SubexprStrParentType::UnopPrefixesExpression => {
+                //         if matches!(**subexpr2, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_)) {
+                //             return format!("{subexpr}");
+                //         }
+                //     }
+                // };
+
+                // if let ExprPrime::UnopPrefixesExpression(_, subexpr2) = subexpr {
+                //     if matches!(**subexpr2, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_)) {
+                //         return format!("{subexpr}");
+                //     }
+                // }
+                // else if let ExprPrime::UnopSuffixesExpression(subexpr2, _) = subexpr {
+                //     if matches!(**subexpr2, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_)) {
+                //         return format!("{subexpr}");
+                //     }
+                // }
+
                 format!("[{subexpr}]")
             }
             else {
@@ -96,29 +125,29 @@ impl Display for ExprPrime {
         }
 
         let to_print = match self {
-           Self::Number(n) => n.get_token().to_string(),
-           Self::Func(func) => func.to_string(),
-           Self::Id(id) => id.get_token().to_string(),
-           Self::UnopsExpression(prefix, expr, suffix) => {
+            Self::Number(n) => n.get_token().to_string(),
+            Self::Func(func) => func.to_string(),
+            Self::Id(id) => id.get_token().to_string(),
+            Self::UnopPrefixesExpression(prefix, expr) => {
                 let prefix_strings: Vec<String> = prefix.iter()
                     .map(|op| op.to_string())
                     .collect();
                 let prefix_concatenated = prefix_strings.join("");
 
+                format!("{}{}", prefix_concatenated, subexpr_str(expr, SubexprStrParentType::UnopPrefix))
+            },
+            Self::UnopSuffixesExpression(expr, suffix) => {
                 let suffix_strings: Vec<String> = suffix.iter()
                     .map(|op| op.to_string())
                     .collect();
                 let suffix_concatenated = suffix_strings.join("");
 
-                format!("{}{}{}", prefix_concatenated, subexpr_str(expr), suffix_concatenated)
-           },
-           //Self::UnopPrefixedExpression(unop, subexpr) => format!("{}{}", unop, subexpr_str(subexpr)),
-           //Self::UnopSuffixedExpression(subexpr, unop) => format!("{}{}", subexpr_str(subexpr), unop),
-           //Self::ParenthesesExpression(subexpr) => format!("{}{}{}", Token::OpParO, subexpr_str(subexpr), Token::OpParC),
-           Self::ParenthesesExpression(subexpr) => subexpr_str(subexpr),
+                format!("{}{}", subexpr_str(expr, SubexprStrParentType::UnopSuffix), suffix_concatenated)
+            },
+           Self::ParenthesesExpression(subexpr) => subexpr_str(subexpr, SubexprStrParentType::Parentheses),
            Self::BinaryInfixExpression(subexpr, suffix) => {
                 let suffix_strings: Vec<String> = suffix.iter()
-                    .map(|(binop, suffix_expr)| format!("{} {}", binop, subexpr_str(suffix_expr)))
+                    .map(|(binop, suffix_expr)| format!("{} {}", binop, subexpr_str(suffix_expr, SubexprStrParentType::BinaryInfix)))
                     .collect();
                 let concatenated = suffix_strings.join(" ");
 
@@ -127,7 +156,7 @@ impl Display for ExprPrime {
                     false => " ".to_string()
                 };
 
-                format!("{}{}{}", subexpr_str(subexpr), space_between, concatenated)
+                format!("{}{}{}", subexpr_str(subexpr, SubexprStrParentType::BinaryInfix), space_between, concatenated)
            }
         };
 

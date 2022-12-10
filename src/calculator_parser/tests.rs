@@ -6,9 +6,7 @@ use super::{terminal, expression, parser};
  * whose to_string method equals the expected string.
  */
 fn default_test(input: &str, expected: &str) {
-    let mut parser = parser::Parser::new(input);
-
-    match parser.parse() {
+    match parser::Parser::parse_line(input) {
         Ok(result) => {
             let result_string = result.to_string();
             assert_eq!(expected, result_string.as_str());
@@ -202,7 +200,7 @@ fn unary_suffix_expression() {
  * Test that unary prefixes in binary expressions are read in
  */
 fn unary_prefix_in_binary_expression() {
-    const EXPECTED: &str = "-5 + -6";
+    const EXPECTED: &str = "[-5] + [-6]";
     let input: &str = "-5 + -6";
     default_test(input, EXPECTED);
 }
@@ -212,7 +210,7 @@ fn unary_prefix_in_binary_expression() {
  * Test that unary suffixes in binary expressions are read in
  */
 fn unary_suffix_in_binary_expression() {
-    const EXPECTED: &str = "5! / 6!";
+    const EXPECTED: &str = "[5!] / [6!]";
     let input: &str = "5! / 6!";
     default_test(input, EXPECTED);
 }
@@ -223,7 +221,7 @@ fn unary_suffix_in_binary_expression() {
  * to the same expression
  */
 fn unary_prefix_and_suffix_in_expression() {
-    const EXPECTED: &str = "-5!";
+    const EXPECTED: &str = "-[5!]";
     let input: &str = "-5!";
     default_test(input, EXPECTED);
 }
@@ -253,7 +251,7 @@ fn unary_repeated_suffix() {
  * Test that both unary prefixes and suffixes can be repeated
  */
 fn unary_repeated_prefix_and_suffix() {
-    const EXPECTED: &str = "---5!!";
+    const EXPECTED: &str = "---[5!!]";
     let input: &str = "---5!!";
     default_test(input, EXPECTED);
 }
@@ -264,7 +262,7 @@ fn unary_repeated_prefix_and_suffix() {
  * seperately in the same binary expression
  */
 fn unary_prefix_and_suffix_in_binary_expression() {
-    const EXPECTED: &str = "-5 ^ 3!!";
+    const EXPECTED: &str = "[-5] ^ [3!!]";
     let input: &str = "-5 ^ 3!!";
     default_test(input, EXPECTED);
 }
@@ -288,6 +286,27 @@ fn unary_prefix_parentheses() {
 fn unary_suffixes_parentheses() {
     const EXPECTED: &str = "[1 + 2]!";
     let input: &str = "(1+2)!";
+    default_test(input, EXPECTED);
+}
+
+
+#[test]
+/**
+ * Test that unary prefixes work in an exponent
+ */
+fn unary_prefix_in_exponent() {
+    const EXPECTED: &str = "1 ^ [-3]";
+    let input: &str = "1^-3";
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that unary suffixes work in an exponent
+ */
+fn unary_suffix_in_exponent() {
+    const EXPECTED: &str = "1 ^ [3!]";
+    let input: &str = "1^3!";
     default_test(input, EXPECTED);
 }
 

@@ -2,19 +2,32 @@
 extern crate lazy_static;
 
 pub mod calculator_parser;
+pub mod calculator_interpreter;
 
 fn main() {
-    let tests = vec![
-        String::from("")
+    // let parser_tests = vec![
+    //     String::from("")
+    // ];
+
+    // for test in parser_tests {
+    //     println!("Parser Test: '{test}'");
+
+    //     match calculator_parser::parser::Parser::parse_line(&test) {
+    //         Ok(parse_tree) => println!(" -- Result: '{parse_tree}' --"),
+    //         Err(parse_err) => eprintln!(" -- Error: '{parse_err}' --")
+    //     }
+    // }
+
+    let interpreter_tests = vec![
+        String::from("add(5, 7)")
     ];
 
-    for test in tests {
-        println!("Test: '{test}'");
+    for test in interpreter_tests {
+        println!("Interpreter Test: '{test}'");
 
-        let mut parser = calculator_parser::parser::Parser::new(&test);
-        match parser.parse() {
-            Ok(parse_tree) => println!(" -- Result: '{parse_tree}' --"),
-            Err(parse_err) => eprintln!(" -- Error: '{parse_err}' --")
+        match calculator_interpreter::Interpreter::default().evaluate_string(&test) {
+            Ok(value) => println!(" -- Result: '{value}' --"),
+            Err(interpreter_err) => eprintln!(" -- Error: '{interpreter_err}' --")
         }
     }
 }
