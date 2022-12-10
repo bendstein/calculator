@@ -19,7 +19,7 @@ fn main() {
     // }
 
     let interpreter_tests = vec![
-        String::from("add(5, 7)")
+        String::from("0 ^ 0")
     ];
 
     for test in interpreter_tests {

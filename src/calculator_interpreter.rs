@@ -3,15 +3,36 @@ use std::{collections::HashMap};
 
 pub mod interpreter_err;
 
+#[cfg(test)]
+pub mod tests;
+
+use interpreter_err::InterpreterErr;
+
+pub type Func0 = fn () -> Result<f32, InterpreterErr>;
+pub type Func1 = fn (f32) -> Result<f32, InterpreterErr>;
+pub type Func2 = fn (f32, f32) -> Result<f32, InterpreterErr>;
+pub type Func3 = fn (f32, f32, f32) -> Result<f32, InterpreterErr>;
+pub type Func4 = fn (f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
+pub type Func5 = fn (f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
+pub type Func6 = fn (f32, f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
+pub type Func7 = fn (f32, f32, f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
+pub type Func8 = fn (f32, f32, f32, f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
+pub type Func9 = fn (f32, f32, f32, f32, f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
+pub type FuncVar = fn (Vec<f32>) -> Result<f32, InterpreterErr>;
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum FunctionArgs {
-    None(fn () -> f32),
-    One(fn (f32) -> f32),
-    Two(fn (f32, f32) -> f32),
-    Three(fn (f32, f32, f32) -> f32),
-    Four(fn (f32, f32, f32, f32) -> f32),
-    Five(fn (f32, f32, f32, f32, f32) -> f32),
-    Variable(fn (Vec<f32>) -> f32),
+    None(Func0),
+    One(Func1),
+    Two(Func2),
+    Three(Func3),
+    Four(Func4),
+    Five(Func5),
+    Six(Func6),
+    Seven(Func7),
+    Eight(Func8),
+    Nine(Func9),
+    Variable(FuncVar),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -29,7 +50,7 @@ impl Function {
 
 impl Default for Function {
     fn default() -> Self {
-        Self::new(FunctionArgs::None(|| 0_f32))
+        Self::new(FunctionArgs::None(|| Ok(0_f32)))
     }
 }
 
@@ -46,8 +67,9 @@ impl Default for Interpreter {
                 ("SUB".to_string(), SUB.clone()),
                 ("MULT".to_string(), MULT.clone()),
                 ("DIV".to_string(), DIV.clone()),
-                ("MOD".to_string(), MOD.clone()),
+                ("REM".to_string(), REM.clone()),
                 ("NEG".to_string(), NEG.clone()),
+                ("FAC".to_string(), FAC.clone()),
                 ("MAX".to_string(), MAX.clone()),
                 ("MIN".to_string(), MIN.clone()),
                 ("CEIL".to_string(), CEIL.clone()),
@@ -68,9 +90,10 @@ impl Default for Interpreter {
                 ("COSH".to_string(), COSH.clone()),
                 ("TANH".to_string(), TANH.clone()),
                 ("LOG".to_string(), LOG.clone()),
-                ("LOG10".to_string(), LOG10.clone()),
+                ("LOGB".to_string(), LOGB.clone()),
                 ("LOG2".to_string(), LOG2.clone()),
                 ("LOGE".to_string(), LOGE.clone()),
+                ("SIGN".to_string(), SIGN.clone()),
                 ("E".to_string(), E.clone()),
                 ("PI".to_string(), PI.clone()),
             ].into_iter()
@@ -80,23 +103,23 @@ impl Default for Interpreter {
 }
 
 impl Interpreter {
-    pub fn evaluate(&self, expression: expression::Expr) -> Result<f32, interpreter_err::InterpreterErr> {
+    pub fn evaluate(&self, expression: expression::Expr) -> Result<f32, InterpreterErr> {
         match expression {
             expression::Expr::None => Ok(0_f32),
             expression::Expr::ExprPrime(expr_prime) => self.evaluate_expr_prime(*expr_prime)
         }
     }
 
-    pub fn evaluate_string(&self, line: &str) -> Result<f32, interpreter_err::InterpreterErr> {
+    pub fn evaluate_string(&self, line: &str) -> Result<f32, InterpreterErr> {
         let expr = match parser::Parser::parse_line(line) {
             Ok(parse_tree) => Ok(parse_tree),
-            Err(parse_err) => Err(interpreter_err::InterpreterErr::new(&parse_err.message))
+            Err(parse_err) => Err(InterpreterErr::new(&parse_err.message))
         }?;
 
         self.evaluate(expr)
     }
 
-    fn evaluate_expr_prime(&self, expression: expression::ExprPrime) -> Result<f32, interpreter_err::InterpreterErr> {
+    fn evaluate_expr_prime(&self, expression: expression::ExprPrime) -> Result<f32, InterpreterErr> {
         match expression {
             expression::ExprPrime::Number(n) => self.evaluate_number(n),
             expression::ExprPrime::Func(f) => self.evaluate_func(f),
@@ -108,11 +131,11 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_number(&self, expression: expression::NumberToken) -> Result<f32, interpreter_err::InterpreterErr> {
+    fn evaluate_number(&self, expression: expression::NumberToken) -> Result<f32, InterpreterErr> {
         Ok(expression.value)
     }
 
-    fn evaluate_func(&self, expression: expression::Func) -> Result<f32, interpreter_err::InterpreterErr> {
+    fn evaluate_func(&self, expression: expression::Func) -> Result<f32, InterpreterErr> {
         let id: String;
         let args: Vec<expression::ExprPrime>;
 
@@ -132,21 +155,21 @@ impl Interpreter {
         .collect();
 
         if matching.is_empty() {
-            return Err(interpreter_err::InterpreterErr::new(format!("No such function '{id}'.").as_str()))
+            return Err(InterpreterErr::new(format!("No such function '{id}'.").as_str()))
         }
 
         let (_, function) = matching.first().unwrap();
 
-        fn validate_args_count(name: &str, expected: usize, actual: usize) -> Result<(), interpreter_err::InterpreterErr> {
+        fn validate_args_count(name: &str, expected: usize, actual: usize) -> Result<(), InterpreterErr> {
             if actual != expected {
-                Err(interpreter_err::InterpreterErr::new(format!("Function '{name}' expected {expected} arguments; got {actual}.").as_str()))
+                Err(InterpreterErr::new(format!("Function '{name}' expected {expected} arguments; got {actual}.").as_str()))
             }
             else {
                 Ok(())
             }
         }
 
-        fn evaluate_args(interpreter: &Interpreter, args: Vec<expression::ExprPrime>) -> Result<Vec<f32>, interpreter_err::InterpreterErr> {
+        fn evaluate_args(interpreter: &Interpreter, args: Vec<expression::ExprPrime>) -> Result<Vec<f32>, InterpreterErr> {
             let mut evaluated: Vec<f32> = Vec::new();
 
             for arg in args {
@@ -157,7 +180,7 @@ impl Interpreter {
             Ok(evaluated)
         }
 
-        Ok(match function.args {
+        match function.args {
             FunctionArgs::None(func) => {
                 validate_args_count(id.as_str(), 0, args.len())?;
                 func()
@@ -187,18 +210,42 @@ impl Interpreter {
                 let evaluated_args = evaluate_args(self, args)?;
                 func(evaluated_args[0], evaluated_args[1], evaluated_args[2], evaluated_args[3], evaluated_args[4])
             },
+            FunctionArgs::Six(func) => {
+                validate_args_count(id.as_str(), 6, args.len())?;
+                let evaluated_args = evaluate_args(self, args)?;
+                func(evaluated_args[0], evaluated_args[1], evaluated_args[2], evaluated_args[3], evaluated_args[4], 
+                    evaluated_args[5])
+            },
+            FunctionArgs::Seven(func) => {
+                validate_args_count(id.as_str(), 7, args.len())?;
+                let evaluated_args = evaluate_args(self, args)?;
+                func(evaluated_args[0], evaluated_args[1], evaluated_args[2], evaluated_args[3], evaluated_args[4], 
+                    evaluated_args[5], evaluated_args[6])
+            },
+            FunctionArgs::Eight(func) => {
+                validate_args_count(id.as_str(), 8, args.len())?;
+                let evaluated_args = evaluate_args(self, args)?;
+                func(evaluated_args[0], evaluated_args[1], evaluated_args[2], evaluated_args[3], evaluated_args[4], 
+                    evaluated_args[5], evaluated_args[6], evaluated_args[7])
+            },
+            FunctionArgs::Nine(func) => {
+                validate_args_count(id.as_str(), 9, args.len())?;
+                let evaluated_args = evaluate_args(self, args)?;
+                func(evaluated_args[0], evaluated_args[1], evaluated_args[2], evaluated_args[3], evaluated_args[4], 
+                    evaluated_args[5], evaluated_args[6], evaluated_args[7], evaluated_args[8])
+            },
             FunctionArgs::Variable(func) => {
                 let evaluated_args = evaluate_args(self, args)?;
                 func(evaluated_args)
             },
-        })
+        }
     }
 
-    // fn evaluate_id(&self, expression: expression::IdToken) -> Result<f32, interpreter_err::InterpreterErr> {
+    // fn evaluate_id(&self, expression: expression::IdToken) -> Result<f32, InterpreterErr> {
     //     unimplemented!()
     // }
 
-    fn evaluate_unary_prefixes(&self, prefixes: Vec<expression::UnopPrefix>, expression: expression::ExprPrime) -> Result<f32, interpreter_err::InterpreterErr> {
+    fn evaluate_unary_prefixes(&self, prefixes: Vec<expression::UnopPrefix>, expression: expression::ExprPrime) -> Result<f32, InterpreterErr> {
         let mut subvalue = self.evaluate_expr_prime(expression)?;
 
         for prefix in prefixes {
@@ -210,28 +257,19 @@ impl Interpreter {
         Ok(subvalue)
     }
 
-    fn evaluate_unary_suffixes(&self, expression: expression::ExprPrime, suffixes: Vec<expression::UnopSuffix>) -> Result<f32, interpreter_err::InterpreterErr> {
+    fn evaluate_unary_suffixes(&self, expression: expression::ExprPrime, suffixes: Vec<expression::UnopSuffix>) -> Result<f32, InterpreterErr> {
         let mut subvalue = self.evaluate_expr_prime(expression)?;
 
         for suffix in suffixes {
             match suffix {
-                expression::UnopSuffix::Fac => {
-                    if subvalue < 0_f32 {
-                        return Err(interpreter_err::InterpreterErr::new("Cannot apply factorial operator to negative value."));
-                    }
-                    else if subvalue != subvalue.round() {
-                        return Err(interpreter_err::InterpreterErr::new("Cannot apply factorial operator to floating point value."));
-                    }
-
-                    subvalue = factorial(subvalue as u32) as f32;
-                }
+                expression::UnopSuffix::Fac => subvalue = factorial(subvalue)?
             };
         };
 
         Ok(subvalue)
     }
 
-    fn evaluate_binary_infix_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::BinopInfix, Box<expression::ExprPrime>)>) -> Result<f32, interpreter_err::InterpreterErr> {
+    fn evaluate_binary_infix_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::BinopInfix, Box<expression::ExprPrime>)>) -> Result<f32, InterpreterErr> {
         let mut value: f32 = self.evaluate_expr_prime(first_child)?;
 
         for (operator, sibling_expr) in siblings {
@@ -241,7 +279,7 @@ impl Interpreter {
                 expression::BinopInfix::Exp => value = value.powf(sibling_value),
                 expression::BinopInfix::Mult => value *= sibling_value,
                 expression::BinopInfix::Div => value /= sibling_value,
-                expression::BinopInfix::Mod => value %= sibling_value,
+                expression::BinopInfix::Rem => value %= sibling_value,
                 expression::BinopInfix::Add => value += sibling_value,
                 expression::BinopInfix::Sub => value -= sibling_value,
             };
@@ -252,55 +290,68 @@ impl Interpreter {
 
 }
 
-fn factorial(n: u32) -> u32 {
-    if n == 0 {
-        1_u32
+fn factorial(n: f32) -> Result<f32, InterpreterErr> {
+    if n == 0_f32 {
+        Ok(1_f32)
+    }
+    else if n < 0_f32 {
+        Err(InterpreterErr::new("Cannot apply factorial operator to negative value."))
+    }
+    else if n != n.round() {
+        Err(InterpreterErr::new("Cannot apply factorial operator to floating point value."))
     }
     else {
-        n * factorial(n - 1)
+        Ok(n * factorial(n - 1_f32)?)
     }
 }
 
+// fn modulo(n: f32, m: f32) -> Result<f32, InterpreterErr> {
+//     todo!();
+// }
+
 lazy_static! {
-    static ref ADD: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| a + b));
-    static ref SUB: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| a - b));
-    static ref MULT: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| a * b));
-    static ref DIV: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| a / b));
-    static ref MOD: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| a % b));
+    static ref ADD: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a + b)));
+    static ref SUB: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a - b)));
+    static ref MULT: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a * b)));
+    static ref DIV: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a / b)));
+    static ref REM: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a % b)));
 
-    static ref NEG: Function = Function::new(FunctionArgs::One(|n: f32| -n));
+    static ref NEG: Function = Function::new(FunctionArgs::One(|n: f32| Ok(-n)));
+    static ref FAC: Function = Function::new(FunctionArgs::One(factorial));
 
-    static ref MAX: Function = Function::new(FunctionArgs::Two(f32::max));
-    static ref MIN: Function = Function::new(FunctionArgs::Two(f32::min));
+    static ref MAX: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(f32::max(a, b))));
+    static ref MIN: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(f32::min(a, b))));
     
-    static ref CEIL: Function = Function::new(FunctionArgs::One(f32::ceil));
-    static ref FLOOR: Function = Function::new(FunctionArgs::One(f32::floor));
-    static ref ROUND: Function = Function::new(FunctionArgs::One(f32::round));
+    static ref CEIL: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::ceil(n))));
+    static ref FLOOR: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::floor(n))));
+    static ref ROUND: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::round(n))));
     
-    static ref FRACT: Function = Function::new(FunctionArgs::One(f32::fract));
+    static ref FRACT: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::fract(n))));
 
-    static ref SQRT: Function = Function::new(FunctionArgs::One(f32::sqrt));
-    static ref EXP: Function = Function::new(FunctionArgs::One(f32::exp));
-    static ref EXP2: Function = Function::new(FunctionArgs::One(f32::exp2));
-    static ref POW: Function = Function::new(FunctionArgs::Two(f32::powf));
+    static ref SQRT: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::sqrt(n))));
+    static ref EXP: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::exp(n))));
+    static ref EXP2: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::exp2(n))));
+    static ref POW: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(f32::powf(a, b))));
 
-    static ref SIN: Function = Function::new(FunctionArgs::One(f32::sin));
-    static ref COS: Function = Function::new(FunctionArgs::One(f32::cos));
-    static ref TAN: Function = Function::new(FunctionArgs::One(f32::tan));
+    static ref SIN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::sin(n))));
+    static ref COS: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::cos(n))));
+    static ref TAN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::tan(n))));
 
-    static ref ASIN: Function = Function::new(FunctionArgs::One(f32::asin));
-    static ref ACOS: Function = Function::new(FunctionArgs::One(f32::acos));
-    static ref ATAN: Function = Function::new(FunctionArgs::One(f32::atan));
+    static ref ASIN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::asin(n))));
+    static ref ACOS: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::acos(n))));
+    static ref ATAN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::atan(n))));
 
-    static ref SINH: Function = Function::new(FunctionArgs::One(f32::sinh));
-    static ref COSH: Function = Function::new(FunctionArgs::One(f32::cosh));
-    static ref TANH: Function = Function::new(FunctionArgs::One(f32::tanh));
+    static ref SINH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::sinh(n))));
+    static ref COSH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::cosh(n))));
+    static ref TANH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::tanh(n))));
 
-    static ref LOG: Function = Function::new(FunctionArgs::Two(f32::log));
-    static ref LOG10: Function = Function::new(FunctionArgs::One(f32::log10));
-    static ref LOG2: Function = Function::new(FunctionArgs::One(f32::log2));
-    static ref LOGE: Function = Function::new(FunctionArgs::One(|n: f32| n.log(std::f32::consts::E)));
+    static ref LOG: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::log10(n))));
+    static ref LOG2: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::log2(n))));
+    static ref LOGE: Function = Function::new(FunctionArgs::One(|n: f32| Ok(n.log(std::f32::consts::E))));
+    static ref LOGB: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(f32::log(a, b))));
 
-    static ref E: Function = Function::new(FunctionArgs::None(|| std::f32::consts::E));
-    static ref PI: Function = Function::new(FunctionArgs::None(|| std::f32::consts::PI));
+    static ref SIGN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::signum(n))));
+
+    static ref E: Function = Function::new(FunctionArgs::None(|| Ok(std::f32::consts::E)));
+    static ref PI: Function = Function::new(FunctionArgs::None(|| Ok(std::f32::consts::PI)));
 }

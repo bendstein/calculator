@@ -9,7 +9,7 @@ const OP_ADD_STR: &str = "+";
 const OP_SUB_STR: &str = "-";
 const OP_MULT_STR: &str = "*";
 const OP_DIV_STR: &str = "/";
-const OP_MOD_STR: &str = "%";
+const OP_REM_STR: &str = "%";
 const OP_EXP_STR: &str = "^";
 const OP_FAC_STR: &str = "!";
 const OP_PAR_O_STR: &str = "(";
@@ -52,9 +52,9 @@ lazy_static! {
     pub static ref OP_DIV: Terminal = Terminal::Literal(String::from(OP_DIV_STR));
 
     /**
-     * Modulus operator
+     * Remainder (modulus) operator
      */
-    pub static ref OP_MOD: Terminal = Terminal::Literal(String::from(OP_MOD_STR));
+    pub static ref OP_REM: Terminal = Terminal::Literal(String::from(OP_REM_STR));
 
     /**
      * Exponentiation operator

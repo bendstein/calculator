@@ -8,7 +8,7 @@ pub enum Token {
     OpSub,
     OpMult,
     OpDiv,
-    OpMod,
+    OpRem,
     OpExp,
     OpFac,
     OpParO,
@@ -25,7 +25,7 @@ impl Token {
             Token::OpSub => &terminals::OP_SUB,
             Token::OpMult => &terminals::OP_MULT,
             Token::OpDiv => &terminals::OP_DIV,
-            Token::OpMod => &terminals::OP_MOD,
+            Token::OpRem => &terminals::OP_REM,
             Token::OpExp => &terminals::OP_EXP,
             Token::OpFac => &terminals::OP_FAC,
             Token::OpParO => &terminals::OP_PAR_O,
@@ -192,7 +192,7 @@ pub enum BinopInfix {
     Exp,
     Mult,
     Div,
-    Mod,
+    Rem,
     Add,
     Sub
 }
@@ -203,7 +203,7 @@ impl From<BinopInfix> for Token {
             BinopInfix::Exp => Self::OpExp,
             BinopInfix::Mult => Self::OpMult,
             BinopInfix::Div => Self::OpDiv,
-            BinopInfix::Mod => Self::OpMod,
+            BinopInfix::Rem => Self::OpRem,
             BinopInfix::Add => Self::OpAdd,
             BinopInfix::Sub => Self::OpSub
         }
@@ -218,7 +218,7 @@ impl TryFrom<Token> for BinopInfix {
             Token::OpExp => Ok(Self::Exp),
             Token::OpMult => Ok(Self::Mult),
             Token::OpDiv => Ok(Self::Div),
-            Token::OpMod => Ok(Self::Mod),
+            Token::OpRem => Ok(Self::Rem),
             Token::OpAdd => Ok(Self::Add),
             Token::OpSub => Ok(Self::Sub),
             _ => Err("The passed value is not a valid binary infix operator.")
@@ -272,7 +272,7 @@ impl Display for BinopInfix2 {
 pub enum BinopInfix1 {
     Mult,
     Div,
-    Mod
+    Rem
 }
 
 impl From<BinopInfix1> for BinopInfix {
@@ -280,7 +280,7 @@ impl From<BinopInfix1> for BinopInfix {
         match value {
             BinopInfix1::Mult => Self::Mult,
             BinopInfix1::Div => Self::Div,
-            BinopInfix1::Mod => Self::Mod
+            BinopInfix1::Rem => Self::Rem
         }
     }
 }
@@ -292,7 +292,7 @@ impl TryFrom<BinopInfix> for BinopInfix1 {
         match value {
             BinopInfix::Mult => Ok(Self::Mult),
             BinopInfix::Div => Ok(Self::Div),
-            BinopInfix::Mod => Ok(Self::Mod),
+            BinopInfix::Rem => Ok(Self::Rem),
             _ => Err("The passed value is not a valid priority 1 binary infix operator.")
         }
     }
@@ -437,7 +437,7 @@ pub struct OpMultToken {}
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct OpDivToken {}
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct OpModToken {}
+pub struct OpRemToken {}
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct OpExpToken {}
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -586,34 +586,34 @@ impl TryFrom<Token> for OpDivToken {
 	}
 }
 
-impl OpModToken {
+impl OpRemToken {
     pub fn new() -> Self {
         Self {}
     }
     pub fn get_token(&self) -> Token {
-        Token::OpMod
+        Token::OpRem
     }
 }
 
-impl Default for OpModToken {
+impl Default for OpRemToken {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl From<OpModToken> for Token {
-	fn from(_: OpModToken) -> Self {
-		Token::OpMod
+impl From<OpRemToken> for Token {
+	fn from(_: OpRemToken) -> Self {
+		Token::OpRem
 	}
 }
 
-impl TryFrom<Token> for OpModToken {
+impl TryFrom<Token> for OpRemToken {
 	type Error = &'static str;
 
 	fn try_from(value: Token) -> Result<Self, Self::Error> {
 		match value {
-			Token::OpMod => Ok(OpModToken {}),
-			_ => Err("The passed value is not an OpMod token.")
+			Token::OpRem => Ok(OpRemToken {}),
+			_ => Err("The passed value is not an OpRem token.")
 		}
 	}
 }

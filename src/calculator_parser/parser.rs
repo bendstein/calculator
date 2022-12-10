@@ -667,7 +667,7 @@ impl<'a> Parser<'a> {
         let tokens = vec![
             xpr::BinopInfix1::Div,
             xpr::BinopInfix1::Mult,
-            xpr::BinopInfix1::Mod
+            xpr::BinopInfix1::Rem
         ];
 
         let mut found: Option<xpr::BinopInfix1> = None;
