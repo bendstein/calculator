@@ -8,7 +8,11 @@ fn main() {
         String::from(""),
         String::from("5+5"),
         String::from("1+2*3^4*5"),
+        String::from("1+2*3^(4*5)"),
+        String::from("sqrt(5)"),
+        String::from("sum(5,6)"),
         String::from("sqrt(10)+5*2^f(6+1)"),
+        String::from("f(sqrt(1+2*3^(4*5)),5)"),
         //String::from("1+"),
     ];
 

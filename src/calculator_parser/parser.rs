@@ -230,6 +230,7 @@ impl<'a> Parser<'a> {
         if let Ok(id) = id_result {
             return Ok(xpr::ExprPrime::Id(id));
         }
+
         //Failed to match. Try to match an expression preceded by a unary prefix operator.
         let unop_expression_result = self.unop_expression();
 
@@ -237,18 +238,18 @@ impl<'a> Parser<'a> {
             return unop_expression_result;
         }
 
-        //Failed to match. Try to match an expression followed by a unary suffix operator.
-        let expression_unop_result = self.expression_unop();
-
-        if expression_unop_result.is_ok() {
-            return expression_unop_result;
-        }
-
         //Failed to match. Try to match an expression in parentheses.
         let paren_expression_paren_result = self.paren_expression_paren();
 
         if paren_expression_paren_result.is_ok() {
             return paren_expression_paren_result;
+        }
+
+        //Failed to match. Try to match an expression followed by a unary suffix operator.
+        let expression_unop_result = self.expression_unop();
+
+        if expression_unop_result.is_ok() {
+            return expression_unop_result;
         }
 
         //Failed to match. Return error
@@ -377,7 +378,7 @@ impl<'a> Parser<'a> {
             let expr_prime = expr_prime_result.unwrap();
 
             //Match was success. Record progress in outer loop.
-            current_lah = inner_lah;
+            current_lah = self.lah;
             func_args.push(expr_prime);
         }
 
@@ -536,10 +537,17 @@ impl<'a> Parser<'a> {
             xpr::UnopPrefix::Neg
         ];
 
+        let mut found: Option<xpr::UnopPrefix> = None;
+
         for token in tokens {
             if xpr::Token::from(token).get_terminal().match_symbol(current) {
-                return Ok(token);
+                found = Some(token);
+                break;
             }
+        }
+
+        if let Some(found_token) = found {
+            return Ok(found_token);
         }
 
         //Match failed. Rollback and return error.
@@ -555,10 +563,17 @@ impl<'a> Parser<'a> {
             xpr::UnopSuffix::Fac
         ];
 
+        let mut found: Option<xpr::UnopSuffix> = None;
+
         for token in tokens {
             if xpr::Token::from(token).get_terminal().match_symbol(current) {
-                return Ok(token);
+                found = Some(token);
+                break;
             }
+        }
+
+        if let Some(found_token) = found {
+            return Ok(found_token);
         }
 
         //Match failed. Rollback and return error.
@@ -574,10 +589,17 @@ impl<'a> Parser<'a> {
             xpr::BinopInfix0::Exp
         ];
 
+        let mut found: Option<xpr::BinopInfix0> = None;
+
         for token in tokens {
             if xpr::Token::from(xpr::BinopInfix::from(token)).get_terminal().match_symbol(current) {
-                return Ok(token);
+                found = Some(token);
+                break;
             }
+        }
+
+        if let Some(found_token) = found {
+            return Ok(found_token);
         }
 
         //Match failed. Rollback and return error.
@@ -595,10 +617,17 @@ impl<'a> Parser<'a> {
             xpr::BinopInfix1::Mod
         ];
 
+        let mut found: Option<xpr::BinopInfix1> = None;
+
         for token in tokens {
             if xpr::Token::from(xpr::BinopInfix::from(token)).get_terminal().match_symbol(current) {
-                return Ok(token);
+                found = Some(token);
+                break;
             }
+        }
+
+        if let Some(found_token) = found {
+            return Ok(found_token);
         }
 
         //Match failed. Rollback and return error.
@@ -615,10 +644,17 @@ impl<'a> Parser<'a> {
             xpr::BinopInfix2::Sub
         ];
 
+        let mut found: Option<xpr::BinopInfix2> = None;
+
         for token in tokens {
             if xpr::Token::from(xpr::BinopInfix::from(token)).get_terminal().match_symbol(current) {            
-                return Ok(token);
+                found = Some(token);
+                break;
             }
+        }
+
+        if let Some(found_token) = found {
+            return Ok(found_token);
         }
 
         //Match failed. Rollback and return error.
