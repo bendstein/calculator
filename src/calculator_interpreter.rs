@@ -86,14 +86,24 @@ impl Default for Interpreter {
                 ("ASIN".to_string(), ASIN.clone()),
                 ("ACOS".to_string(), ACOS.clone()),
                 ("ATAN".to_string(), ATAN.clone()),
+                ("CSC".to_string(), CSC.clone()),
+                ("SEC".to_string(), SEC.clone()),
+                ("COT".to_string(), COT.clone()),
+                ("ACSC".to_string(), ACSC.clone()),
+                ("ASEC".to_string(), ASEC.clone()),
+                ("ACOT".to_string(), ACOT.clone()),
                 ("SINH".to_string(), SINH.clone()),
                 ("COSH".to_string(), COSH.clone()),
                 ("TANH".to_string(), TANH.clone()),
+                ("ASINH".to_string(), ASINH.clone()),
+                ("ACOSH".to_string(), ACOSH.clone()),
+                ("ATANH".to_string(), ATANH.clone()),
                 ("LOG".to_string(), LOG.clone()),
                 ("LOGB".to_string(), LOGB.clone()),
                 ("LOG2".to_string(), LOG2.clone()),
                 ("LOGE".to_string(), LOGE.clone()),
                 ("SIGN".to_string(), SIGN.clone()),
+                ("COND".to_string(), COND.clone()),
                 ("E".to_string(), E.clone()),
                 ("PI".to_string(), PI.clone()),
             ].into_iter()
@@ -341,9 +351,21 @@ lazy_static! {
     static ref ACOS: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::acos(n))));
     static ref ATAN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::atan(n))));
 
+    static ref CSC: Function = Function::new(FunctionArgs::One(|n: f32| Ok(1_f32 / f32::sin(n))));
+    static ref SEC: Function = Function::new(FunctionArgs::One(|n: f32| Ok(1_f32 / f32::cos(n))));
+    static ref COT: Function = Function::new(FunctionArgs::One(|n: f32| Ok(1_f32 / f32::tan(n))));
+
+    static ref ACSC: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::asin(1_f32 / n))));
+    static ref ASEC: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::acos(1_f32 / n))));
+    static ref ACOT: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::atan(1_f32 / n))));
+
     static ref SINH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::sinh(n))));
     static ref COSH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::cosh(n))));
     static ref TANH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::tanh(n))));
+
+    static ref ASINH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::asinh(n))));
+    static ref ACOSH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::acosh(n))));
+    static ref ATANH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::atanh(n))));
 
     static ref LOG: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::log10(n))));
     static ref LOG2: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::log2(n))));
@@ -351,6 +373,14 @@ lazy_static! {
     static ref LOGB: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(f32::log(a, b))));
 
     static ref SIGN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::signum(n))));
+    static ref COND: Function = Function::new(FunctionArgs::Four(|a: f32, b: f32, c: f32, d: f32| {
+        Ok(if a == b {
+            c
+        }
+        else {
+            d
+        })
+    }));
 
     static ref E: Function = Function::new(FunctionArgs::None(|| Ok(std::f32::consts::E)));
     static ref PI: Function = Function::new(FunctionArgs::None(|| Ok(std::f32::consts::PI)));

@@ -755,3 +755,284 @@ fn func_fract_2() {
     let input: &str = "fract(-91.93)";
     default_test(input, expected);
 }
+
+#[test]
+/**
+ * Test that max function evaluates as expected
+ */
+fn fn_max_0() {
+    let expected: f32 = 5_f32;
+    let input: &str = "max(5, 3)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that max function evaluates as expected
+ */
+fn fn_max_1() {
+    let expected: f32 = -3_f32;
+    let input: &str = "max(-5, -3)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that min function evaluates as expected
+ */
+fn fn_min_0() {
+    let expected: f32 = 3_f32;
+    let input: &str = "min(5, 3)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that min function evaluates as expected
+ */
+fn fn_min_1() {
+    let expected: f32 = -5_f32;
+    let input: &str = "min(-5, -3)";
+    default_test(input, expected);
+}
+
+
+#[test]
+/**
+ * Test that sign function evaluates as expected
+ */
+fn fn_sign_0() {
+    let expected: f32 = 1_f32;
+    let input: &str = "sign(15)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that sign function evaluates as expected
+ */
+fn fn_sign_1() {
+    let expected: f32 = -1_f32;
+    let input: &str = "sign(-12.4)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that cond function evaluates as expected
+ */
+fn fn_cond_0() {
+    let expected: f32 = 0_f32;
+    let input: &str = "cond(5, 1, 1, 0)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that cond function evaluates as expected
+ */
+fn fn_cond_1() {
+    let expected: f32 = 1_f32;
+    let input: &str = "cond(1, 1, 1, 0)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that PI function evaluates as expected
+ */
+fn fn_pi() {
+    let expected: f32 = std::f32::consts::PI;
+    let input: &str = "pi()";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that E function evaluates as expected
+ */
+fn fn_e() {
+    let expected: f32 = std::f32::consts::E;
+    let input: &str = "e()";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that sin function evaluates as expected
+ */
+fn fn_sin() {
+    let expected: f32 = f32::sin(5_f32);
+    let input: &str = "sin(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that cos function evaluates as expected
+ */
+fn fn_cos() {
+    let expected: f32 = f32::cos(5_f32);
+    let input: &str = "cos(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that tan function evaluates as expected
+ */
+fn fn_tan() {
+    let expected: f32 = f32::tan(5_f32);
+    let input: &str = "tan(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that asin function evaluates as expected
+ */
+fn fn_asin() {
+    let expected: f32 = f32::asin(0.5_f32);
+    let input: &str = "asin(0.5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that acos function evaluates as expected
+ */
+fn fn_acos() {
+    let expected: f32 = f32::acos(0.5_f32);
+    let input: &str = "acos(0.5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that atan function evaluates as expected
+ */
+fn fn_atan() {
+    let expected: f32 = f32::atan(0.5_f32);
+    let input: &str = "atan(0.5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that csc function evaluates as expected
+ */
+fn fn_csc() {
+    let expected: f32 = 1_f32 / f32::sin(5_f32);
+    let input: &str = "csc(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that sec function evaluates as expected
+ */
+fn fn_sec() {
+    let expected: f32 = 1_f32 / f32::cos(5_f32);
+    let input: &str = "sec(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that cot function evaluates as expected
+ */
+fn fn_cot() {
+    let expected: f32 = 1_f32 / f32::tan(5_f32);
+    let input: &str = "cot(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that acsc function evaluates as expected
+ */
+fn fn_acsc() {
+    let expected: f32 = f32::asin(1_f32 / 5_f32);
+    let input: &str = "acsc(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that asec function evaluates as expected
+ */
+fn fn_asec() {
+    let expected: f32 = f32::acos(1_f32 / 5_f32);
+    let input: &str = "asec(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that acot function evaluates as expected
+ */
+fn fn_acot() {
+    let expected: f32 = f32::atan(1_f32 / 5_f32);
+    let input: &str = "acot(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that sinh function evaluates as expected
+ */
+fn fn_sinh() {
+    let expected: f32 = f32::sinh(5_f32);
+    let input: &str = "sinh(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that cosh function evaluates as expected
+ */
+fn fn_cosh() {
+    let expected: f32 = f32::cosh(5_f32);
+    let input: &str = "cosh(5)";
+    default_test(input, expected);
+}
+#[test]
+
+/**
+ * Test that tanh function evaluates as expected
+ */
+fn fn_tanh() {
+    let expected: f32 = f32::tanh(5_f32);
+    let input: &str = "tanh(5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that asinh function evaluates as expected
+ */
+fn fn_asinh() {
+    let expected: f32 = f32::asinh(0.5_f32);
+    let input: &str = "asinh(0.5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that acosh function evaluates as expected
+ */
+fn fn_acosh() {
+    let expected: f32 = f32::acosh(1_f32);
+    let input: &str = "acosh(1)";
+    default_test(input, expected);
+}
+#[test]
+
+/**
+ * Test that atanh function evaluates as expected
+ */
+fn fn_atanh() {
+    let expected: f32 = f32::atanh(0.5_f32);
+    let input: &str = "atanh(0.5)";
+    default_test(input, expected);
+}
