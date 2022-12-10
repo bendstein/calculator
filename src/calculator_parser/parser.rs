@@ -45,13 +45,8 @@ impl<'a> Parser<'a> {
     }
 
     fn get_and_increment(&mut self) -> &str {
-        if self.tokens.len() > self.lah + 1 {
-            self.lah += 1;
-            self.token_at(self.lah - 1)
-        }
-        else {
-            self.token_at(self.lah)
-        }
+        self.lah += 1;
+        self.token_at(self.lah - 1)
     }
 
     fn expr_prime(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
@@ -235,51 +230,108 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn expr_base(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    fn expr_base(&mut self) -> Result<xpr::ExprPrime, ParserErr> {     
+        let initial_lah = self.lah;
+
+        let mut result: Option<Result<xpr::ExprPrime, ParserErr>> = None;
+
+        let mut unop_prefixes: Vec<xpr::UnopPrefix> = Vec::new();
+        let mut unop_suffixes: Vec<xpr::UnopSuffix> = Vec::new();
+
+        //Match 0+ unary prefix operators
+        loop {
+            let unop_prefix_result = self.unop_pre();
+
+            if let Ok(unop_prefix) = unop_prefix_result {
+                unop_prefixes.push(unop_prefix);
+                continue;
+            }
+
+            break;
+        };
+
         //Try to match number.
         let number_result = self.number();
 
         if let Ok(num) = number_result {
-            return Ok(xpr::ExprPrime::Number(num));
+            result = Some(Ok(xpr::ExprPrime::Number(num)));
         }
 
-        //Failed to match. Try to match function.
-        let func_result = self.func();
+        if result.is_none() {
+            //Failed to match. Try to match function.
+            let func_result = self.func();
 
-        if let Ok(func) = func_result {
-            return Ok(xpr::ExprPrime::Func(func));
+            if let Ok(func) = func_result {
+                result = Some(Ok(xpr::ExprPrime::Func(func)));
+            }
         }
 
-        //Failed to match. Try to match id.
-        let id_result = self.id();
+        if result.is_none() {
+            //Failed to match. Try to match id.
+            let id_result = self.id();
 
-        if let Ok(id) = id_result {
-            return Ok(xpr::ExprPrime::Id(id));
+            if let Ok(id) = id_result {
+                result = Some(Ok(xpr::ExprPrime::Id(id)));
+            }
         }
 
-        //Failed to match. Try to match an expression preceded by a unary prefix operator.
-        let unop_expression_result = self.unop_expression();
+        // if result.is_none() {
+        //     //Failed to match. Try to match an expression preceded by a unary prefix operator.
+        //     let unop_expression_result = self.unop_expression();
 
-        if unop_expression_result.is_ok() {
-            return unop_expression_result;
+        //     if unop_expression_result.is_ok() {
+        //         return unop_expression_result;
+        //     }
+        // }
+
+        if result.is_none() {
+            //Failed to match. Try to match an expression in parentheses.
+            let paren_expression_paren_result = self.paren_expression_paren();
+
+            if paren_expression_paren_result.is_ok() {
+                result = Some(paren_expression_paren_result);
+            }
         }
 
-        //Failed to match. Try to match an expression in parentheses.
-        let paren_expression_paren_result = self.paren_expression_paren();
+        // if result.is_none() {
+        //     //Failed to match. Try to match an expression followed by a unary suffix operator.
+        //     let expression_unop_result = self.expression_unop();
 
-        if paren_expression_paren_result.is_ok() {
-            return paren_expression_paren_result;
+        //     if expression_unop_result.is_ok() {
+        //         return expression_unop_result;
+        //     }
+        // }
+
+        if let Some(some_result) = result {
+            //Match 0+ unary suffix operators
+            loop {
+                let unop_suffix_result = self.unop_suf();
+
+                if let Ok(unop_suffix) = unop_suffix_result {
+                    unop_suffixes.push(unop_suffix);
+                    continue;
+                }
+
+                break;
+            };
+
+            if let Ok(ok_result) = some_result {
+                if !unop_prefixes.is_empty() || !unop_suffixes.is_empty() {
+                    Ok(xpr::ExprPrime::UnopsExpression(unop_prefixes, Box::new(ok_result), unop_suffixes))
+                }
+                else {
+                    Ok(ok_result)
+                }
+            }
+            else {
+                some_result
+            }
         }
-
-        //Failed to match. Try to match an expression followed by a unary suffix operator.
-        let expression_unop_result = self.expression_unop();
-
-        if expression_unop_result.is_ok() {
-            return expression_unop_result;
+        else {
+            //Failed to match. Rollback lah and return error
+            self.lah = initial_lah;
+            Err(ParserErr::new(""))
         }
-
-        //Failed to match. Return error
-        Err(ParserErr::new(""))
     }
 
     fn number(&mut self) -> Result<xpr::NumberToken, ParserErr> {
@@ -487,53 +539,53 @@ impl<'a> Parser<'a> {
         Ok(xpr::IdToken::new(concatenated.as_str()))
     }
 
-    fn unop_expression(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
-        //Try to match a unary prefix operator
-        let unop_prefix_result = self.unop_pre();
+    // fn unop_expression(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    //     //Try to match a unary prefix operator
+    //     let unop_prefix_result = self.unop_pre();
 
-        //Unary prefix operator is required. Return error if not present.
-        if let Err(unox_prefix_err) = unop_prefix_result {
-            return Err(unox_prefix_err);
-        }
+    //     //Unary prefix operator is required. Return error if not present.
+    //     if let Err(unox_prefix_err) = unop_prefix_result {
+    //         return Err(unox_prefix_err);
+    //     }
 
-        let unop_prefix = unop_prefix_result.unwrap();
+    //     let unop_prefix = unop_prefix_result.unwrap();
 
-        //Try to match the following expression
-        let expr_prime_result = self.expr_prime();
+    //     //Try to match the following base expression
+    //     let expr_base_result = self.expr_base();
 
-        //Expression is required. Return error if not present.
-        if expr_prime_result.is_err() {
-            return expr_prime_result;
-        }
+    //     //Expression is required. Return error if not present.
+    //     if expr_base_result.is_err() {
+    //         return expr_base_result;
+    //     }
 
-        let expr_prime = expr_prime_result.unwrap();
+    //     let expr_base = expr_base_result.unwrap();
 
-        Ok(xpr::ExprPrime::UnopPrefixedExpression(unop_prefix, Box::new(expr_prime)))
-    }
+    //     Ok(xpr::ExprPrime::UnopPrefixedExpression(unop_prefix, Box::new(expr_base)))
+    // }
 
-    fn expression_unop(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
-        //Try to match the starting expression
-        let expr_prime_result = self.expr_prime();
+    // fn expression_unop(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    //     //Try to match the starting base expression
+    //     let expr_base_result = self.expr_base();
 
-        //Starting expression is required. Return error if not present.
-        if expr_prime_result.is_err() {
-            return expr_prime_result;
-        }
+    //     //Starting base expression is required. Return error if not present.
+    //     if expr_base_result.is_err() {
+    //         return expr_base_result;
+    //     }
 
-        let expr_prime = expr_prime_result.unwrap();
+    //     let expr_base = expr_base_result.unwrap();
 
-        //Try to match a unary suffix operator
-        let unop_suffix_result = self.unop_suf();
+    //     //Try to match a unary suffix operator
+    //     let unop_suffix_result = self.unop_suf();
 
-        //Unary suffix operator is required. Return error if not present.
-        if let Err(unox_suffix_err) = unop_suffix_result {
-            return Err(unox_suffix_err);
-        }
+    //     //Unary suffix operator is required. Return error if not present.
+    //     if let Err(unox_suffix_err) = unop_suffix_result {
+    //         return Err(unox_suffix_err);
+    //     }
 
-        let unop_suffix = unop_suffix_result.unwrap();
+    //     let unop_suffix = unop_suffix_result.unwrap();
 
-        Ok(xpr::ExprPrime::UnopSuffixedExpression(Box::new(expr_prime), unop_suffix))
-    }
+    //     Ok(xpr::ExprPrime::UnopSuffixedExpression(Box::new(expr_base), unop_suffix))
+    // }
 
     fn paren_expression_paren(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
         let initial_lah = self.lah;

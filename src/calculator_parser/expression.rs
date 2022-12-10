@@ -78,8 +78,7 @@ pub enum ExprPrime {
     Number(NumberToken),
     Func(Func),
     Id(IdToken),
-    UnopPrefixedExpression(UnopPrefix, Box<ExprPrime>),
-    UnopSuffixedExpression(Box<ExprPrime>, UnopSuffix),
+    UnopsExpression(Vec<UnopPrefix>, Box<ExprPrime>, Vec<UnopSuffix>),
     ParenthesesExpression(Box<ExprPrime>),
     BinaryInfixExpression(Box<ExprPrime>, Vec<(BinopInfix, Box<ExprPrime>)>)
 }
@@ -87,7 +86,8 @@ pub enum ExprPrime {
 impl Display for ExprPrime {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         fn subexpr_str(subexpr: &ExprPrime) -> String {
-            if !matches!(subexpr, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_)) {
+            if !matches!(subexpr, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_)
+                    | ExprPrime::UnopsExpression(_, _, _)) {
                 format!("[{subexpr}]")
             }
             else {
@@ -99,9 +99,23 @@ impl Display for ExprPrime {
            Self::Number(n) => n.get_token().to_string(),
            Self::Func(func) => func.to_string(),
            Self::Id(id) => id.get_token().to_string(),
-           Self::UnopPrefixedExpression(unop, subexpr) => format!("{}{}", unop, subexpr_str(subexpr)),
-           Self::UnopSuffixedExpression(subexpr, unop) => format!("{}{}", subexpr_str(subexpr), unop),
-           Self::ParenthesesExpression(subexpr) => format!("{}{}{}", Token::OpParO, subexpr_str(subexpr), Token::OpParC),
+           Self::UnopsExpression(prefix, expr, suffix) => {
+                let prefix_strings: Vec<String> = prefix.iter()
+                    .map(|op| op.to_string())
+                    .collect();
+                let prefix_concatenated = prefix_strings.join("");
+
+                let suffix_strings: Vec<String> = suffix.iter()
+                    .map(|op| op.to_string())
+                    .collect();
+                let suffix_concatenated = suffix_strings.join("");
+
+                format!("{}{}{}", prefix_concatenated, subexpr_str(expr), suffix_concatenated)
+           },
+           //Self::UnopPrefixedExpression(unop, subexpr) => format!("{}{}", unop, subexpr_str(subexpr)),
+           //Self::UnopSuffixedExpression(subexpr, unop) => format!("{}{}", subexpr_str(subexpr), unop),
+           //Self::ParenthesesExpression(subexpr) => format!("{}{}{}", Token::OpParO, subexpr_str(subexpr), Token::OpParC),
+           Self::ParenthesesExpression(subexpr) => subexpr_str(subexpr),
            Self::BinaryInfixExpression(subexpr, suffix) => {
                 let suffix_strings: Vec<String> = suffix.iter()
                     .map(|(binop, suffix_expr)| format!("{} {}", binop, subexpr_str(suffix_expr)))
