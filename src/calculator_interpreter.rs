@@ -137,7 +137,8 @@ impl Interpreter {
             expression::ExprPrime::UnopPrefixesExpression(prefix, subexpr) => self.evaluate_unary_prefixes(prefix, *subexpr),
             expression::ExprPrime::UnopSuffixesExpression(subexpr, suffixes) => self.evaluate_unary_suffixes(*subexpr, suffixes),
             expression::ExprPrime::ParenthesesExpression(subexpr) => self.evaluate_expr_prime(*subexpr),
-            expression::ExprPrime::BinaryInfixExpression(first_child, siblings) => self.evaluate_binary_infix_expression(*first_child, siblings)
+            expression::ExprPrime::BinaryInfixExpression(first_child, siblings) => self.evaluate_binary_infix_expression(*first_child, siblings),
+            expression::ExprPrime::BinaryInfixFunctionExpression(first_child, siblings) => self.evaluate_binary_infix_function_expression(*first_child, siblings),
         }
     }
 
@@ -293,6 +294,19 @@ impl Interpreter {
                 expression::BinopInfix::Add => value += sibling_value,
                 expression::BinopInfix::Sub => value -= sibling_value,
             };
+        };
+
+        Ok(value)
+    }
+
+    fn evaluate_binary_infix_function_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::IdToken, Box<expression::ExprPrime>)>) -> Result<f32, InterpreterErr> {
+        let mut value: f32 = self.evaluate_expr_prime(first_child)?;
+
+        for (binfunc, sibling_expr) in siblings {
+            value = self.evaluate_func(expression::Func::FuncWithArgs(binfunc, vec![
+                expression::ExprPrime::Number(expression::NumberToken::new(value)), 
+                *sibling_expr]
+            ))?
         };
 
         Ok(value)

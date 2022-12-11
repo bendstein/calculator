@@ -67,12 +67,69 @@ impl<'a> Parser<'a> {
         self.whitespace();
 
         //Handle in steps for each priority, starting with the step with the lowest priority to account for operator precedence
-        let result = self.expr_2();
+        let result = self.expr_id_fn();
 
         //Optional whitespace
         self.whitespace();
 
         result
+    }
+
+
+    fn expr_id_fn(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+        //First handle operators of higher priority to account for operator precedence
+        let expr_2_result = self.expr_2();
+
+        //expr_2 is required. Return error.
+        if expr_2_result.is_err() {
+            return expr_2_result;
+        }
+
+        let expr_2 = expr_2_result.unwrap();
+
+        let mut children: Vec<(xpr::IdToken, Box<xpr::ExprPrime>)> = Vec::new();
+        let mut current_lah = self.lah;
+
+        loop {
+            //Match optional whitespace
+            self.whitespace();
+
+            //Check for identifier
+            let id_result = self.id();
+
+            //Not followed by an infix function. Rollback lah and break from loop.
+            if id_result.is_err() {
+                self.lah = current_lah;
+                break;
+            }
+
+            let id = id_result.unwrap();
+
+            //Match optional whitespace
+            self.whitespace();
+
+            //Check for another expression of priority 2
+            let expr_2_suffix_result = self.expr_2();
+
+            //Not followed by an expression of priority 2. Rollback lah and break from loop.
+            if expr_2_suffix_result.is_err() {
+                self.lah = current_lah;
+                break;
+            }
+
+            let expr_2_suffix = expr_2_suffix_result.unwrap();
+
+            //Successfully matched section. Record results and update current_lah before repeating.
+            children.push((id, Box::new(expr_2_suffix)));
+            current_lah = self.lah;
+        };
+
+        if children.is_empty() {
+            Ok(expr_2)
+        }
+        else {
+            Ok(xpr::ExprPrime::BinaryInfixFunctionExpression(Box::new(expr_2), children))
+        }
     }
 
     fn expr_2(&mut self) -> Result<xpr::ExprPrime, ParserErr> {

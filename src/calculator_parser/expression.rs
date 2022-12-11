@@ -81,7 +81,8 @@ pub enum ExprPrime {
     UnopPrefixesExpression(Vec<UnopPrefix>, Box<ExprPrime>),
     UnopSuffixesExpression(Box<ExprPrime>, Vec<UnopSuffix>),
     ParenthesesExpression(Box<ExprPrime>),
-    BinaryInfixExpression(Box<ExprPrime>, Vec<(BinopInfix, Box<ExprPrime>)>)
+    BinaryInfixExpression(Box<ExprPrime>, Vec<(BinopInfix, Box<ExprPrime>)>),
+    BinaryInfixFunctionExpression(Box<ExprPrime>, Vec<(IdToken, Box<ExprPrime>)>),
 }
 
 impl Display for ExprPrime {
@@ -157,7 +158,20 @@ impl Display for ExprPrime {
                 };
 
                 format!("{}{}{}", subexpr_str(subexpr, SubexprStrParentType::BinaryInfix), space_between, concatenated)
-           }
+           },
+           Self::BinaryInfixFunctionExpression(subexpr, suffix) => {
+            let suffix_strings: Vec<String> = suffix.iter()
+                .map(|(binfunc, suffix_expr)| format!("{} {}", binfunc.value, subexpr_str(suffix_expr, SubexprStrParentType::BinaryInfix)))
+                .collect();
+            let concatenated = suffix_strings.join(" ");
+
+            let space_between = match suffix.is_empty() {
+                true => "".to_string(),
+                false => " ".to_string()
+            };
+
+            format!("{}{}{}", subexpr_str(subexpr, SubexprStrParentType::BinaryInfix), space_between, concatenated)
+       },
         };
 
         f.write_str(to_print.as_str())
