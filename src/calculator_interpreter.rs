@@ -127,7 +127,7 @@ impl Interpreter {
     pub fn evaluate_string(&self, line: &str) -> Result<f32, InterpreterErr> {
         let expr = match parser::Parser::parse_line(line) {
             Ok(parse_tree) => Ok(parse_tree),
-            Err(parse_err) => Err(InterpreterErr::new(&parse_err.message))
+            Err(parse_err) => Err(InterpreterErr::new(parse_err.message()))
         }?;
 
         self.evaluate(expr)

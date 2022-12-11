@@ -21,6 +21,10 @@ impl<'a> Parser<'a> {
         }
     }
 
+    pub fn lah(&self) -> usize {
+        self.lah
+    }
+
     pub fn parse_line(line: &'a str) -> Result<xpr::Expr, ParserErr> {
         let mut parser = Self::new(line);
         parser.parse()
@@ -34,11 +38,17 @@ impl<'a> Parser<'a> {
             let expression_result = self.expr_prime();
 
             match expression_result {
-                Err(err) => Err(err),
+                Err(err) => {
+                    if err.propagate() {
+                        Err(err)
+                    }
+                    else {
+                        Err(ParserErr::err("Expected an expression."))
+                    }
+                },
                 Ok(expr) => {
-
                     if self.lah < self.tokens.len() {
-                        Err(ParserErr::new(""))
+                        Err(ParserErr::new("An unknown syntax error has occurred."))
                     }
                     else {
                         Ok(xpr::Expr::ExprPrime(Box::new(expr)))
@@ -75,14 +85,18 @@ impl<'a> Parser<'a> {
         result
     }
 
-
     fn expr_id_fn(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
         //First handle operators of higher priority to account for operator precedence
         let expr_2_result = self.expr_2();
 
-        //expr_2 is required. Return error.
-        if expr_2_result.is_err() {
-            return expr_2_result;
+        //Expression 2 error
+        if let Err(expr_2_err) = expr_2_result {
+            if expr_2_err.propagate() {
+                return Err(expr_2_err);
+            }
+            else {
+                return Err(ParserErr::default())
+            }
         }
 
         let expr_2 = expr_2_result.unwrap();
@@ -97,10 +111,16 @@ impl<'a> Parser<'a> {
             //Check for identifier
             let id_result = self.id();
 
-            //Not followed by an infix function. Rollback lah and break from loop.
-            if id_result.is_err() {
-                self.lah = current_lah;
-                break;
+            //Not followed by an id.
+            if let Err(id_err) = id_result {
+                if id_err.propagate() {
+                    return Err(id_err);
+                }
+                //Rollback lah and break from loop.
+                else {
+                    self.lah = current_lah;
+                    break;
+                }
             }
 
             let id = id_result.unwrap();
@@ -111,10 +131,14 @@ impl<'a> Parser<'a> {
             //Check for another expression of priority 2
             let expr_2_suffix_result = self.expr_2();
 
-            //Not followed by an expression of priority 2. Rollback lah and break from loop.
-            if expr_2_suffix_result.is_err() {
-                self.lah = current_lah;
-                break;
+            //Expression 2 is required
+            if let Err(expr_2_suffix_err) = expr_2_suffix_result {
+                if expr_2_suffix_err.propagate() {
+                    return Err(expr_2_suffix_err);
+                }
+                else {
+                    return Err(ParserErr::err(format!("Expected expression after function '{}'", id.value).as_str()))
+                }
             }
 
             let expr_2_suffix = expr_2_suffix_result.unwrap();
@@ -136,9 +160,14 @@ impl<'a> Parser<'a> {
         //First handle operators of higher priority to account for operator precedence
         let expr_1_result = self.expr_1();
 
-        //expr_1 is required. Return error.
-        if expr_1_result.is_err() {
-            return expr_1_result;
+        //expr_1 is required.
+        if let Err(expr_1_err) = expr_1_result {
+            if expr_1_err.propagate() {
+                return Err(expr_1_err);
+            }
+            else {
+                return Err(ParserErr::default())
+            }
         }
 
         let expr_1 = expr_1_result.unwrap();
@@ -153,10 +182,16 @@ impl<'a> Parser<'a> {
             //Check for binary infix operator with priority 2
             let binop_in_2_result = self.binop_in_2();
 
-            //Not followed by a binary infix operator with priority 2. Rollback lah and break from loop.
-            if binop_in_2_result.is_err() {
-                self.lah = current_lah;
-                break;
+            //Not followed by a binary infix operator with priority 2.
+            if let Err(binop_in_2_err) = binop_in_2_result {
+                if binop_in_2_err.propagate() {
+                    return Err(binop_in_2_err);
+                }
+                //Rollback lah and break from loop.
+                else {
+                    self.lah = current_lah;
+                    break;
+                }
             }
 
             let binop_in_2 = binop_in_2_result.unwrap();
@@ -167,10 +202,14 @@ impl<'a> Parser<'a> {
             //Check for another expression of priority 1
             let expr_1_suffix_result = self.expr_1();
 
-            //Not followed by an expression of priority 1. Rollback lah and break from loop.
-            if expr_1_suffix_result.is_err() {
-                self.lah = current_lah;
-                break;
+            //Expression 1 suffix is required
+            if let Err(expr_1_suffix_err) = expr_1_suffix_result {
+                if expr_1_suffix_err.propagate() {
+                    return Err(expr_1_suffix_err);
+                }
+                else {
+                    return Err(ParserErr::err(format!("Expected expression after operator '{binop_in_2}'").as_str()))
+                }
             }
 
             let expr_1_suffix = expr_1_suffix_result.unwrap();
@@ -192,9 +231,14 @@ impl<'a> Parser<'a> {
         //First handle operators of higher priority to account for operator precedence
         let expr_0_result = self.expr_0();
 
-        //expr_0 is required. Return error.
-        if expr_0_result.is_err() {
-            return expr_0_result;
+        //expr_0 is required.
+        if let Err(expr_0_err) = expr_0_result {
+            if expr_0_err.propagate() {
+                return Err(expr_0_err);
+            }
+            else {
+                return Err(ParserErr::default())
+            }
         }
 
         let expr_0 = expr_0_result.unwrap();
@@ -209,10 +253,16 @@ impl<'a> Parser<'a> {
             //Check for binary infix operator with priority 1
             let binop_in_1_result = self.binop_in_1();
 
-            //Not followed by a binary infix operator with priority 1. Rollback lah and break from loop.
-            if binop_in_1_result.is_err() {
-                self.lah = current_lah;
-                break;
+            //Not followed by a binary infix operator with priority 1.
+            if let Err(binop_in_1_err) = binop_in_1_result {
+                if binop_in_1_err.propagate() {
+                    return Err(binop_in_1_err);
+                }
+                //Rollback lah and break from loop.
+                else {
+                    self.lah = current_lah;
+                    break;
+                }
             }
 
             let binop_in_1 = binop_in_1_result.unwrap();
@@ -223,10 +273,14 @@ impl<'a> Parser<'a> {
             //Check for another expression of priority 0
             let expr_0_suffix_result = self.expr_0();
 
-            //Not followed by an expression of priority 0. Rollback lah and break from loop.
-            if expr_0_suffix_result.is_err() {
-                self.lah = current_lah;
-                break;
+            //expr_0 is required
+            if let Err(expr_0_suffix_err) = expr_0_suffix_result {
+                if expr_0_suffix_err.propagate() {
+                    return Err(expr_0_suffix_err);
+                }
+                else {
+                    return Err(ParserErr::err(format!("Expected expression after operator '{binop_in_1}'").as_str()))
+                }
             }
 
             let expr_0_suffix = expr_0_suffix_result.unwrap();
@@ -248,9 +302,14 @@ impl<'a> Parser<'a> {
         //First handle operators of higher priority to account for operator precedence
         let expr_base_result = self.expr_base();
 
-        //expr_base is required. Return error.
-        if expr_base_result.is_err() {
-            return expr_base_result;
+        //expr_base is required.
+        if let Err(expr_base_err) = expr_base_result {
+            if expr_base_err.propagate() {
+                return Err(expr_base_err);
+            }
+            else {
+                return Err(ParserErr::default())
+            }
         }
 
         let expr_base = expr_base_result.unwrap();
@@ -265,10 +324,16 @@ impl<'a> Parser<'a> {
             //Check for binary infix operator with priority 0
             let binop_in_0_result = self.binop_in_0();
 
-            //Not followed by a binary infix operator with priority 0. Rollback lah and break from loop.
-            if binop_in_0_result.is_err() {
-                self.lah = current_lah;
-                break;
+            //Not followed by a binary infix operator with priority 0.
+            if let Err(binop_in_0_err) = binop_in_0_result {
+                if binop_in_0_err.propagate() {
+                    return Err(binop_in_0_err);
+                }
+                //Rollback lah and break from loop.
+                else {
+                    self.lah = current_lah;
+                    break;
+                }
             }
 
             let binop_in_0 = binop_in_0_result.unwrap();
@@ -279,10 +344,14 @@ impl<'a> Parser<'a> {
             //Check for another expression of same priority
             let expr_0_suffix_result = self.expr_0();
 
-            //Not followed by another expression of priority 0. Rollback lah and break from loop.
-            if expr_0_suffix_result.is_err() {
-                self.lah = current_lah;
-                break;
+            //expr 0 suffix is required
+            if let Err(expr_0_suffix_err) = expr_0_suffix_result {
+                if expr_0_suffix_err.propagate() {
+                    return Err(expr_0_suffix_err);
+                }
+                else {
+                    return Err(ParserErr::err(format!("Expected expression after operator {binop_in_0}").as_str()))
+                }
             }
 
             let expr_0_suffix = expr_0_suffix_result.unwrap();
@@ -303,7 +372,7 @@ impl<'a> Parser<'a> {
     fn expr_base(&mut self) -> Result<xpr::ExprPrime, ParserErr> {     
         let initial_lah = self.lah;
 
-        let mut result: Option<Result<xpr::ExprPrime, ParserErr>> = None;
+        let mut result: Option<Result<xpr::ExprPrime, ParserErr>>;
 
         let mut unop_prefixes: Vec<xpr::UnopPrefix> = Vec::new();
         let mut unop_suffixes: Vec<xpr::UnopSuffix> = Vec::new();
@@ -312,47 +381,67 @@ impl<'a> Parser<'a> {
         loop {
             let unop_prefix_result = self.unop_pre();
 
-            if let Ok(unop_prefix) = unop_prefix_result {
-                unop_prefixes.push(unop_prefix);
-                continue;
+            if let Err(unop_prefix_err) = unop_prefix_result {
+                if unop_prefix_err.propagate() {
+                    return Err(unop_prefix_err);
+                }
+                else {
+                    break;
+                }
             }
 
-            break;
+            let unop_prefix = unop_prefix_result.unwrap();
+            unop_prefixes.push(unop_prefix);
+            continue;
         };
 
         //Try to match number.
         let number_result = self.number();
 
-        if let Ok(num) = number_result {
-            result = Some(Ok(xpr::ExprPrime::Number(num)));
-        }
+        result = match number_result {
+            Ok(num) => Some(Ok(xpr::ExprPrime::Number(num))),
+            Err(err) => {
+                if err.propagate() {
+                    return Err(err);
+                }
+                else {
+                    None
+                }
+            }
+        };
 
         if result.is_none() {
             //Failed to match. Try to match function.
             let func_result = self.func();
 
-            if let Ok(func) = func_result {
-                result = Some(Ok(xpr::ExprPrime::Func(func)));
-            }
+            result = match func_result {
+                Ok(func) => Some(Ok(xpr::ExprPrime::Func(func))),
+                Err(err) => {
+                    if err.propagate() {
+                        return Err(err);
+                    }
+                    else {
+                        None
+                    }
+                }
+            };
         }
-
-        //Disallow variables for now
-        // if result.is_none() {
-        //     //Failed to match. Try to match id.
-        //     let id_result = self.id();
-
-        //     if let Ok(id) = id_result {
-        //         result = Some(Ok(xpr::ExprPrime::Id(id)));
-        //     }
-        // }
 
         if result.is_none() {
             //Failed to match. Try to match an expression in parentheses.
             let paren_expression_paren_result = self.paren_expression_paren();
 
-            if paren_expression_paren_result.is_ok() {
-                result = Some(paren_expression_paren_result);
-            }
+            result = match paren_expression_paren_result {
+                Ok(paren_expression_paren_result) => Some(Ok(paren_expression_paren_result)),
+                Err(err) => {
+                    if err.propagate() {
+                        return Err(err);
+                    }
+                    else {
+                        None
+                    }
+                }
+            };
         }
 
         if let Some(some_result) = result {
@@ -360,12 +449,19 @@ impl<'a> Parser<'a> {
             loop {
                 let unop_suffix_result = self.unop_suf();
 
-                if let Ok(unop_suffix) = unop_suffix_result {
-                    unop_suffixes.push(unop_suffix);
-                    continue;
+                if let Err(unop_suffix_err) = unop_suffix_result {
+                    if unop_suffix_err.propagate() {
+                        return Err(unop_suffix_err);
+                    }
+                    else {
+                        break;
+                    }
                 }
 
-                break;
+                let unop_suffix = unop_suffix_result.unwrap();
+
+                unop_suffixes.push(unop_suffix);
+                continue;
             };
 
             if let Ok(ok_result) = some_result {
@@ -389,7 +485,7 @@ impl<'a> Parser<'a> {
         else {
             //Failed to match. Rollback lah and return error
             self.lah = initial_lah;
-            Err(ParserErr::new(""))
+            Err(ParserErr::default())
         }
     }
 
@@ -413,7 +509,7 @@ impl<'a> Parser<'a> {
 
         //Make sure at least one digit is present
         if collected.is_empty() {
-            return Err(ParserErr::new(""));
+            return Err(ParserErr::default());
         }
 
         //Check if the next symbol is a decimal point
@@ -439,13 +535,16 @@ impl<'a> Parser<'a> {
             };
 
             //Make sure at least one digit is present
-            if !collected.is_empty() {
-                //Successfully matched. Record progress in outer state
-                current_lah = current_lah_1;
-                collected.push(radix_pt_token);
-                for term in collected_1 {
-                    collected.push(term)
-                }
+            if collected_1.is_empty() {
+                let concatenated = collected.join("");
+                return Err(ParserErr::err(format!("Expected digit after '{concatenated}.'").as_str()));
+            }
+
+            //Successfully matched. Record progress in outer state
+            current_lah = current_lah_1;
+            collected.push(radix_pt_token);
+            for term in collected_1 {
+                collected.push(term)
             }
         }
 
@@ -454,7 +553,7 @@ impl<'a> Parser<'a> {
         let parsed= concatenated.parse::<f32>();
 
         if let Err(_parse_int_err) = parsed {
-            return Err(ParserErr::new("Failed to parse number."));
+            return Err(ParserErr::err(format!("Failed to parse number '{concatenated}'.").as_str()));
         }
 
         self.lah = current_lah;
@@ -482,65 +581,108 @@ impl<'a> Parser<'a> {
         //Opening paren is required. Rollback and return error if not present.
         if !xpr::Token::OpParO.get_terminal().match_symbol(token) {
             self.lah = initial_lah;
-            return Err(ParserErr::new(""));
+            return Err(ParserErr::default());
         }
 
         //Optional whitespace
         self.whitespace();
 
+        //Check if next token is closing paren
+        let token_closing_paren_no_args = self.token_at(self.lah);
+
+        //If next character is not a closing paren, then the function should have arguments
+        let should_have_args: bool = !xpr::Token::OpParC.get_terminal().match_symbol(token_closing_paren_no_args);
+
         //Try to match function arguments
         let mut current_lah = self.lah;
         let mut func_args: Vec<xpr::ExprPrime> = Vec::new();
 
-        loop {
-            let mut inner_lah = current_lah;
-            
-            //If at least one argument is present, match the argument delimiter
-            if !func_args.is_empty() {
-                let token = self.token_at(inner_lah);
-
-                if xpr::Token::Delimiter.get_terminal().match_symbol(token) {
-                    inner_lah += 1;
+        if should_have_args {
+            loop {
+                let mut inner_lah = current_lah;
+                
+                //If at least one argument is present, match the argument delimiter
+                if !func_args.is_empty() {
+                    let token = self.token_at(inner_lah);
+    
+                    if xpr::Token::Delimiter.get_terminal().match_symbol(token) {
+                        inner_lah += 1;
+                    }
+                    //Delimiter is required. Break from loop if not present.
+                    else {
+                        break;
+                    }
                 }
-                //Delimiter is required. Break from loop if not present.
-                else {
-                    break;
+    
+                self.lah = inner_lah;
+    
+                //Match optional whitespace
+                self.whitespace();
+    
+                //inner_lah = self.lah;
+    
+                //Match expression
+                let expr_prime_result = self.expr_prime();
+    
+                //Expression is required.
+                if let Err(expr_prime_err) = expr_prime_result {
+                    if expr_prime_err.propagate() {
+                        return Err(expr_prime_err);
+                    }
+                    else {
+                        let concatenated = match func_args.is_empty() {
+                            true => String::from(""),
+                            false => {
+                                if func_args.len() == 1 {
+                                    func_args[0].to_string()
+                                }
+                                else {
+                                    let arg_strings: Vec<String> = func_args.iter()
+                                    .map(|arg| arg.to_string())
+                                    .collect();
+
+                                    arg_strings.join(", ")
+                                }
+                            }
+                        };
+
+                        return Err(ParserErr::err(format!("Expected function argument after '{}({concatenated}'.", id.value).as_str()))
+                    }
                 }
-            }
 
-            self.lah = inner_lah;
-
-            //Match optional whitespace
-            self.whitespace();
-
-            //inner_lah = self.lah;
-
-            //Match expression
-            let expr_prime_result = self.expr_prime();
-
-            //Expression is required. Rollback lah and break from loop if not present.
-            if expr_prime_result.is_err() {
-                self.lah = current_lah;
-                break;
-            }
-            
-            let expr_prime = expr_prime_result.unwrap();
-
-            //Optional whitespace
-            self.whitespace();
-
-            //Match was success. Record progress in outer loop.
-            current_lah = self.lah;
-            func_args.push(expr_prime);
+                let expr_prime = expr_prime_result.unwrap();
+    
+                //Optional whitespace
+                self.whitespace();
+    
+                //Match was success. Record progress in outer loop.
+                current_lah = self.lah;
+                func_args.push(expr_prime);
+            }    
         }
 
         //Try to match a closing paren
         let token = self.get_and_increment();
 
-        //Closing paren is required. Rollback and return error if not present.
+        //Closing paren is required.
         if !xpr::Token::OpParC.get_terminal().match_symbol(token) {
-            self.lah = initial_lah;
-            return Err(ParserErr::new(""));
+            let concatenated = match func_args.is_empty() {
+                true => String::from(""),
+                false => {
+                    if func_args.len() == 1 {
+                        func_args[0].to_string()
+                    }
+                    else {
+                        let arg_strings: Vec<String> = func_args.iter()
+                        .map(|arg| arg.to_string())
+                        .collect();
+
+                        arg_strings.join(", ")
+                    }
+                }
+            };
+
+            return Err(ParserErr::err(format!("Expected closing parenthesis ')' after '{}({concatenated}'.", id.value).as_str()));
         }
 
         if func_args.is_empty() {
@@ -587,12 +729,13 @@ impl<'a> Parser<'a> {
             break;
         };
 
+        let concatenated = symbols.join("");
+
         if !seen_letter {
-            return Err(ParserErr::new(""));
+            return Err(ParserErr::default());
         }
 
         //Record lah progress and return id
-        let concatenated = symbols.join("");
         self.lah = current_lah;
 
         Ok(xpr::IdToken::new(concatenated.as_str()))
@@ -607,7 +750,7 @@ impl<'a> Parser<'a> {
         //Opening paren is required. Rollback and return error if not present.
         if !xpr::Token::OpParO.get_terminal().match_symbol(token) {
             self.lah = initial_lah;
-            return Err(ParserErr::new(""));
+            return Err(ParserErr::default());
         }
 
         //Optional whitespace
@@ -616,10 +759,14 @@ impl<'a> Parser<'a> {
         //Try to match the inner expression
         let expr_prime_result = self.expr_prime();
 
-        //Inner expression is required. Rollback and return error if not present.
-        if expr_prime_result.is_err() {
-            self.lah = initial_lah;
-            return expr_prime_result;
+        //Inner expression is required.
+        if let Err(expr_prime_err) = expr_prime_result {
+            if expr_prime_err.propagate() {
+                return Err(expr_prime_err);
+            }
+            else {
+                return Err(ParserErr::err("Exepcted expression after opening parenthesis '('."));
+            }
         }
 
         let expr_prime = expr_prime_result.unwrap();
@@ -630,10 +777,9 @@ impl<'a> Parser<'a> {
         //Try to match a closing paren
         let token = self.get_and_increment();
 
-        //Closing paren is required. Rollback and return error if not present.
+        //Closing paren is required.
         if !xpr::Token::OpParC.get_terminal().match_symbol(token) {
-            self.lah = initial_lah;
-            return Err(ParserErr::new(""));
+            return Err(ParserErr::err(format!("Expected closing parenthesis ')' after expression '({expr_prime}'.").as_str()));
         }
 
         Ok(xpr::ExprPrime::ParenthesesExpression(Box::new(expr_prime)))
@@ -662,7 +808,7 @@ impl<'a> Parser<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::new(""))
+        Err(ParserErr::default())
     }
 
     fn unop_suf(&mut self) -> Result<xpr::UnopSuffix, ParserErr> {
@@ -688,7 +834,7 @@ impl<'a> Parser<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::new(""))
+        Err(ParserErr::default())
     }
 
     fn binop_in_0(&mut self) -> Result<xpr::BinopInfix0, ParserErr> {
@@ -714,7 +860,7 @@ impl<'a> Parser<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::new(""))
+        Err(ParserErr::default())
     }
 
     fn binop_in_1(&mut self) -> Result<xpr::BinopInfix1, ParserErr> {
@@ -742,7 +888,7 @@ impl<'a> Parser<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::new(""))
+        Err(ParserErr::default())
     }
 
     fn binop_in_2(&mut self) -> Result<xpr::BinopInfix2, ParserErr> {
@@ -769,7 +915,7 @@ impl<'a> Parser<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::new(""))
+        Err(ParserErr::default())
     }
 
     fn whitespace(&mut self) {

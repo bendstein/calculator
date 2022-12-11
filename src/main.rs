@@ -38,10 +38,12 @@ fn main() {
             break;
         }
 
-        let parsed = match calculator_parser::parser::Parser::parse_line(&input) {
+        let mut parser = calculator_parser::parser::Parser::new(&input);
+
+        let parsed = match parser.parse() {
             Ok(value) => value,
             Err(e) => {
-                eprintln!("An error occurred while parsing expression '{input}': {e}");
+                eprintln!("An error occurred while parsing expression '{input}'. At {}: {e}", parser.lah());
                 continue;
             }
         };
