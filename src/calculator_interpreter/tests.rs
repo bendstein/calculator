@@ -1,3 +1,5 @@
+use std::ops::{Range, RangeInclusive};
+
 use super::Interpreter;
 
 /**
@@ -32,7 +34,6 @@ fn inf_test(input: &str) {
     }
 }
 
-
 /**
  * The provided input, should be parsed and evaluated
  * to NaN
@@ -47,6 +48,55 @@ fn nan_test(input: &str) {
             panic!("{err}")
         }
     }
+}
+
+/**
+ * The provided input, should not be parsed and evaluated
+ * to NaN
+ */
+fn not_nan_test(input: &str, repeat: usize) {
+    let interpreter = Interpreter::default();
+    
+    for _ in 0_usize..repeat {
+        match interpreter.evaluate_string(input) {
+            Ok(result) => {
+                assert!(!result.is_nan(), "Testing that {result} is a number")
+            },
+            Err(err) => {
+                panic!("{err}")
+            }
+        }
+    }   
+}
+
+fn in_range_test(input: &str, range: Range<f32>, repeat: usize) {
+    let interpreter = Interpreter::default();
+
+    for _ in 0_usize..repeat {
+        match interpreter.evaluate_string(input) {
+            Ok(result) => {
+                assert!(range.contains(&result), "Testing that {result} is in the range [{}, {}).", range.start, range.end)
+            },
+            Err(err) => {
+                panic!("{err}")
+            }
+        }
+    }   
+}
+
+fn in_range_inc_test(input: &str, range: RangeInclusive<f32>, repeat: usize) {
+    let interpreter = Interpreter::default();
+
+    for _ in 0_usize..repeat {
+        match interpreter.evaluate_string(input) {
+            Ok(result) => {
+                assert!(range.contains(&result), "Testing that {result} is in the range [{}, {}].", range.start(), range.end())
+            },
+            Err(err) => {
+                panic!("{err}")
+            }
+        }
+    }  
 }
 
 /**
@@ -1075,4 +1125,38 @@ fn infix_function_3() {
     let expected: f32 = 24_f32;
     let input: &str = "(sqrt(2^(2 add 4)) div 2)!";
     default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that random function returns a number
+ */
+fn rand_0() {
+    let repeat: usize = 100_usize;
+    let input: &str = "rand()";
+    not_nan_test(input, repeat)
+}
+
+#[test]
+/**
+ * Test that ranged random function returns a number
+ * in the range
+ */
+fn rand_1() {
+    let repeat: usize = 100_usize;
+    let range = 5_f32..12.5_f32;
+    let input: &str = "rrand(5, 12.5)";
+    in_range_test(input, range, repeat)
+}
+
+#[test]
+/**
+ * Test that inclusive ranged random function returns a number
+ * in the range
+ */
+fn rand_2() {
+    let repeat: usize = 100_usize;
+    let range = 12.05_f32..=19_f32;
+    let input: &str = "rrand(12.05, 19)";
+    in_range_inc_test(input, range, repeat)
 }

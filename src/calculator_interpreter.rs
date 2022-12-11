@@ -7,6 +7,7 @@ pub mod interpreter_err;
 pub mod tests;
 
 use interpreter_err::InterpreterErr;
+use rand::Rng;
 
 pub type Func0 = fn () -> Result<f32, InterpreterErr>;
 pub type Func1 = fn (f32) -> Result<f32, InterpreterErr>;
@@ -102,6 +103,9 @@ impl Default for Interpreter {
                 ("LOGB".to_string(), LOGB.clone()),
                 ("LOG2".to_string(), LOG2.clone()),
                 ("LOGE".to_string(), LOGE.clone()),
+                ("RAND".to_string(), RAND.clone()),
+                ("RRAND".to_string(), RRAND.clone()),
+                ("RRANDI".to_string(), RRANDI.clone()),
                 ("SIGN".to_string(), SIGN.clone()),
                 ("COND".to_string(), COND.clone()),
                 ("E".to_string(), E.clone()),
@@ -333,6 +337,18 @@ fn factorial(n: f32) -> Result<f32, InterpreterErr> {
 //     todo!();
 // }
 
+fn random() -> Result<f32, InterpreterErr> {
+    Ok(rand::thread_rng().gen::<f32>())
+}
+
+fn random_range(min: f32, max: f32) -> Result<f32, InterpreterErr> {
+    Ok(rand::thread_rng().gen_range(min..max))
+}
+
+fn random_range_inc(min: f32, max: f32) -> Result<f32, InterpreterErr> {
+    Ok(rand::thread_rng().gen_range(min..=max))
+}
+
 lazy_static! {
     static ref ADD: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a + b)));
     static ref SUB: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a - b)));
@@ -395,6 +411,10 @@ lazy_static! {
             d
         })
     }));
+
+    static ref RAND: Function = Function::new(FunctionArgs::None(random));
+    static ref RRAND: Function = Function::new(FunctionArgs::Two(random_range));
+    static ref RRANDI: Function = Function::new(FunctionArgs::Two(random_range_inc));
 
     static ref E: Function = Function::new(FunctionArgs::None(|| Ok(std::f32::consts::E)));
     static ref PI: Function = Function::new(FunctionArgs::None(|| Ok(std::f32::consts::PI)));

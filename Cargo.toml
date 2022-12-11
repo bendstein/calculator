@@ -10,3 +10,4 @@ parse_args = { path = "lib/arg_parser" }
 regex = "1"
 unicode-segmentation = "1.9.0"
 lazy_static = "1.4.0"
+rand = "0.8.4"
