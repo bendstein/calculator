@@ -6,10 +6,11 @@ extern crate lazy_static;
 pub mod calculator_parser;
 pub mod calculator_interpreter;
 
-const EXIT_COMMAND: &str = "exit";
+const EXIT_COMMAND: &str = ":exit";
+const CLEAR_COMMAND: &str = ":clear";
 
 fn main() {
-    println!("Enter the expression to evaluate, or '{EXIT_COMMAND}' to exit.");
+    println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, or '{EXIT_COMMAND}' to exit.");
 
     loop {
         print!("> ");
@@ -36,6 +37,10 @@ fn main() {
 
         if input.eq_ignore_ascii_case(EXIT_COMMAND) {
             break;
+        }
+        else if input.eq_ignore_ascii_case(CLEAR_COMMAND) {
+            print!("{esc}c", esc = 27 as char);
+            continue;
         }
 
         let mut parser = calculator_parser::parser::Parser::new(&input);
