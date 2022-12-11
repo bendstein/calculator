@@ -2,6 +2,53 @@ use std::fmt::Display;
 
 use super::terminal::{Terminal, terminals};
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+
+pub enum Constant {
+    Pi,
+    E
+}
+
+impl Constant {
+    pub fn get_terminal(&self) -> &Terminal {
+        match self {
+            Self::Pi => &terminals::CONST_PI,
+            Self::E => &terminals::CONST_E
+        }
+    }
+}
+
+impl TryFrom<String> for Constant {
+    type Error = &'static str;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let constants = vec![
+            Self::Pi,
+            Self::E
+        ];
+
+        match constants.iter()
+        .find(|c| c.get_terminal().match_symbol(&value)) 
+        {
+            Some(c) => Ok(*c),
+            None => Err("Value is not a predefined constant.")
+        }
+    }
+}
+
+impl Display for Constant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let terminal = self.get_terminal();
+        let to_display: String = match terminal {
+            Terminal::Epsilon => String::from(""),
+            Terminal::Literal(s) => s.to_string(),
+            Terminal::RegularExpresion(_) => panic!("Cannot get display value for constant!")
+        };
+
+        f.write_str(to_display.as_str())
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     OpAdd,
@@ -14,8 +61,9 @@ pub enum Token {
     OpParO,
     OpParC,
     Delimiter,
-    Number(f32),
-    Id(String)
+    Number(f64),
+    Id(String),
+    Constant(Constant)
 }
 
 impl Token {
@@ -32,7 +80,8 @@ impl Token {
             Token::OpParC => &terminals::OP_PAR_C,
             Token::Delimiter => &terminals::DELIMITER,
             Token::Number(_) => &terminals::DIGIT,
-            Token::Id(_) => &terminals::LETTER
+            Token::Id(_) => &terminals::LETTER,
+            Token::Constant(c) => c.get_terminal()
         }
     }
 }
@@ -181,6 +230,7 @@ impl Display for ExprPrime {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Func {
     EmptyFunc(IdToken),
+    ConstantFunc(Constant),
     FuncWithArgs(IdToken, Vec<ExprPrime>),
 }
 
@@ -188,6 +238,7 @@ impl Display for Func {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {       
         let to_display = match self {
             Func::EmptyFunc(id) => format!("{}{}{}", id.get_token(), Token::OpParO, Token::OpParC),
+            Func::ConstantFunc(constant) => constant.to_string(),
             Func::FuncWithArgs(id, args) => {
                 let args_strings: Vec<String> = args.iter()
                     .map(|expr| expr.to_string())
@@ -464,7 +515,7 @@ pub struct OpParCToken {}
 pub struct DelimiterToken {}
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct NumberToken {
-    pub value: f32
+    pub value: f64
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct IdToken {
@@ -793,7 +844,7 @@ impl TryFrom<Token> for DelimiterToken {
 }
 
 impl NumberToken {
-    pub fn new(value: f32) -> Self {
+    pub fn new(value: f64) -> Self {
         Self {
             value
         }
@@ -805,7 +856,7 @@ impl NumberToken {
 
 impl Default for NumberToken {
     fn default() -> Self {
-        Self::new(0_f32)
+        Self::new(0_f64)
     }
 }
 

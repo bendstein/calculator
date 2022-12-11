@@ -13,7 +13,7 @@ impl Terminal {
     pub fn match_symbol(&self, input: &str) -> bool {
         match self {
             Self::Epsilon => true,
-            Self::Literal(s) => input.eq(s),
+            Self::Literal(s) => input.eq_ignore_ascii_case(s),
             Self::RegularExpresion(r) => r.is_match(input)
         }
     }

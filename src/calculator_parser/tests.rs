@@ -393,6 +393,66 @@ fn infix_function_2() {
 }
 
 #[test]
+/**
+ * Test that constant functions are parsed when using function syntax
+ */
+fn constant_func_0() {
+    const EXPECTED: &str = "PI()";
+    let input: &str = "PI()";
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that constant functions are parsed when using function syntax
+ */
+fn constant_func_1() {
+    const EXPECTED: &str = "2 * pi()";
+    let input: &str = "2 * pi()";
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that constant functions are parsed when using function syntax
+ */
+fn constant_func_2() {
+    const EXPECTED: &str = "sqrt(PI())";
+    let input: &str = "sqrt(PI())";
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that constant functions are parsed when not using function syntax
+ */
+fn constant_0() {
+    const EXPECTED: &str = "PI";
+    let input: &str = "PI";
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that constant functions are parsed when not using function syntax
+ */
+fn constant_1() {
+    const EXPECTED: &str = "2 * PI";
+    let input: &str = "2 * pi";
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that constant functions are parsed when not using function syntax
+ */
+fn constant_2() {
+    const EXPECTED: &str = "sqrt(PI)";
+    let input: &str = "sqrt(PI)";
+    default_test(input, EXPECTED);
+}
+
+#[test]
 #[should_panic]
 /**
  * Test that the following is invalid syntax

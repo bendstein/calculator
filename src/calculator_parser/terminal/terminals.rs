@@ -16,6 +16,10 @@ const OP_PAR_O_STR: &str = "(";
 const OP_PAR_C_STR: &str = ")";
 const DELIMITER_STR: &str = ",";
 const UNDERSCORE_STR: &str = "_";
+
+const PI_CONST_STR: &str = "PI";
+const E_CONST_STR: &str = "E";
+
 const DIGIT_REG_STR: &str = r#"[0-9]"#;
 const LETTER_REG_STR: &str = r#"[a-zA-Z]"#;
 const WHITESPACE_REG_STR: &str = r#"\s"#;
@@ -87,6 +91,16 @@ lazy_static! {
     pub static ref UNDERSCORE: Terminal = Terminal::Literal(String::from(UNDERSCORE_STR));
 
     /**
+     * Constant PI (Archimedes' Constant)
+     */
+    pub static ref CONST_PI: Terminal = Terminal::Literal(String::from(PI_CONST_STR));
+
+    /**
+     * Constant E (Euler's Number)
+     */
+    pub static ref CONST_E: Terminal = Terminal::Literal(String::from(E_CONST_STR));
+
+    /**
      * A single digit, 0-9
      */
     pub static ref DIGIT: Terminal = Terminal::RegularExpresion(Regex::new(DIGIT_REG_STR).unwrap());
@@ -100,4 +114,5 @@ lazy_static! {
      * One or more characters of whitespace
      */
     pub static ref WHITESPACE: Terminal = Terminal::RegularExpresion(Regex::new(WHITESPACE_REG_STR).unwrap());
+
 }

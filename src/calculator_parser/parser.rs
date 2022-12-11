@@ -550,7 +550,7 @@ impl<'a> Parser<'a> {
 
         let concatenated = collected.join("");
 
-        let parsed= concatenated.parse::<f32>();
+        let parsed= concatenated.parse::<f64>();
 
         if let Err(_parse_int_err) = parsed {
             return Err(ParserErr::err(format!("Failed to parse number '{concatenated}'.").as_str()));
@@ -578,10 +578,19 @@ impl<'a> Parser<'a> {
         //Try to match an opening paren
         let token = self.get_and_increment();
 
-        //Opening paren is required. Rollback and return error if not present.
         if !xpr::Token::OpParO.get_terminal().match_symbol(token) {
-            self.lah = initial_lah;
-            return Err(ParserErr::default());
+            //Opening paren is required, unless the id is a predefined constant,
+            //in which case it will be treated as a zero-arg function.
+            //Descrement lah.
+            if let Ok(constant) = xpr::Constant::try_from(id.value) {
+                self.lah -= 1;
+                return Ok(xpr::Func::ConstantFunc(constant));
+            }
+            //Not a constant. Rollback and return error if not present.
+            else {
+                self.lah = initial_lah;
+                return Err(ParserErr::default());
+            }
         }
 
         //Optional whitespace

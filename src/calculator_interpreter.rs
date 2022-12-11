@@ -9,17 +9,17 @@ pub mod tests;
 use interpreter_err::InterpreterErr;
 use rand::Rng;
 
-pub type Func0 = fn () -> Result<f32, InterpreterErr>;
-pub type Func1 = fn (f32) -> Result<f32, InterpreterErr>;
-pub type Func2 = fn (f32, f32) -> Result<f32, InterpreterErr>;
-pub type Func3 = fn (f32, f32, f32) -> Result<f32, InterpreterErr>;
-pub type Func4 = fn (f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
-pub type Func5 = fn (f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
-pub type Func6 = fn (f32, f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
-pub type Func7 = fn (f32, f32, f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
-pub type Func8 = fn (f32, f32, f32, f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
-pub type Func9 = fn (f32, f32, f32, f32, f32, f32, f32, f32, f32) -> Result<f32, InterpreterErr>;
-pub type FuncVar = fn (Vec<f32>) -> Result<f32, InterpreterErr>;
+pub type Func0 = fn () -> Result<f64, InterpreterErr>;
+pub type Func1 = fn (f64) -> Result<f64, InterpreterErr>;
+pub type Func2 = fn (f64, f64) -> Result<f64, InterpreterErr>;
+pub type Func3 = fn (f64, f64, f64) -> Result<f64, InterpreterErr>;
+pub type Func4 = fn (f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
+pub type Func5 = fn (f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
+pub type Func6 = fn (f64, f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
+pub type Func7 = fn (f64, f64, f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
+pub type Func8 = fn (f64, f64, f64, f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
+pub type Func9 = fn (f64, f64, f64, f64, f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
+pub type FuncVar = fn (Vec<f64>) -> Result<f64, InterpreterErr>;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum FunctionArgs {
@@ -51,7 +51,7 @@ impl Function {
 
 impl Default for Function {
     fn default() -> Self {
-        Self::new(FunctionArgs::None(|| Ok(0_f32)))
+        Self::new(FunctionArgs::None(|| Ok(0_f64)))
     }
 }
 
@@ -102,7 +102,7 @@ impl Default for Interpreter {
                 ("LOG".to_string(), LOG.clone()),
                 ("LOGB".to_string(), LOGB.clone()),
                 ("LOG2".to_string(), LOG2.clone()),
-                ("LOGE".to_string(), LOGE.clone()),
+                ("LN".to_string(), LN.clone()),
                 ("RAND".to_string(), RAND.clone()),
                 ("RRAND".to_string(), RRAND.clone()),
                 ("RRANDI".to_string(), RRANDI.clone()),
@@ -117,14 +117,14 @@ impl Default for Interpreter {
 }
 
 impl Interpreter {
-    pub fn evaluate(&self, expression: expression::Expr) -> Result<f32, InterpreterErr> {
+    pub fn evaluate(&self, expression: expression::Expr) -> Result<f64, InterpreterErr> {
         match expression {
-            expression::Expr::None => Ok(0_f32),
+            expression::Expr::None => Ok(0_f64),
             expression::Expr::ExprPrime(expr_prime) => self.evaluate_expr_prime(*expr_prime)
         }
     }
 
-    pub fn evaluate_string(&self, line: &str) -> Result<f32, InterpreterErr> {
+    pub fn evaluate_string(&self, line: &str) -> Result<f64, InterpreterErr> {
         let expr = match parser::Parser::parse_line(line) {
             Ok(parse_tree) => Ok(parse_tree),
             Err(parse_err) => Err(InterpreterErr::new(parse_err.message()))
@@ -133,7 +133,7 @@ impl Interpreter {
         self.evaluate(expr)
     }
 
-    fn evaluate_expr_prime(&self, expression: expression::ExprPrime) -> Result<f32, InterpreterErr> {
+    fn evaluate_expr_prime(&self, expression: expression::ExprPrime) -> Result<f64, InterpreterErr> {
         match expression {
             expression::ExprPrime::Number(n) => self.evaluate_number(n),
             expression::ExprPrime::Func(f) => self.evaluate_func(f),
@@ -146,11 +146,11 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_number(&self, expression: expression::NumberToken) -> Result<f32, InterpreterErr> {
+    fn evaluate_number(&self, expression: expression::NumberToken) -> Result<f64, InterpreterErr> {
         Ok(expression.value)
     }
 
-    fn evaluate_func(&self, expression: expression::Func) -> Result<f32, InterpreterErr> {
+    fn evaluate_func(&self, expression: expression::Func) -> Result<f64, InterpreterErr> {
         let id: String;
         let args: Vec<expression::ExprPrime>;
 
@@ -159,6 +159,10 @@ impl Interpreter {
                 id = name.value;
                 args = Vec::new();
             },
+            expression::Func::ConstantFunc(constant) => {
+                id = constant.to_string();
+                args = Vec::new();
+            }
             expression::Func::FuncWithArgs(name, f_args) => {
                 id = name.value;
                 args = f_args;
@@ -184,8 +188,8 @@ impl Interpreter {
             }
         }
 
-        fn evaluate_args(interpreter: &Interpreter, args: Vec<expression::ExprPrime>) -> Result<Vec<f32>, InterpreterErr> {
-            let mut evaluated: Vec<f32> = Vec::new();
+        fn evaluate_args(interpreter: &Interpreter, args: Vec<expression::ExprPrime>) -> Result<Vec<f64>, InterpreterErr> {
+            let mut evaluated: Vec<f64> = Vec::new();
 
             for arg in args {
                 let val = interpreter.evaluate_expr_prime(arg)?;
@@ -256,23 +260,23 @@ impl Interpreter {
         }
     }
 
-    // fn evaluate_id(&self, expression: expression::IdToken) -> Result<f32, InterpreterErr> {
+    // fn evaluate_id(&self, expression: expression::IdToken) -> Result<f64, InterpreterErr> {
     //     unimplemented!()
     // }
 
-    fn evaluate_unary_prefixes(&self, prefixes: Vec<expression::UnopPrefix>, expression: expression::ExprPrime) -> Result<f32, InterpreterErr> {
+    fn evaluate_unary_prefixes(&self, prefixes: Vec<expression::UnopPrefix>, expression: expression::ExprPrime) -> Result<f64, InterpreterErr> {
         let mut subvalue = self.evaluate_expr_prime(expression)?;
 
         for prefix in prefixes {
             match prefix {
-                expression::UnopPrefix::Neg => subvalue *= -1_f32
+                expression::UnopPrefix::Neg => subvalue *= -1_f64
             };
         };
 
         Ok(subvalue)
     }
 
-    fn evaluate_unary_suffixes(&self, expression: expression::ExprPrime, suffixes: Vec<expression::UnopSuffix>) -> Result<f32, InterpreterErr> {
+    fn evaluate_unary_suffixes(&self, expression: expression::ExprPrime, suffixes: Vec<expression::UnopSuffix>) -> Result<f64, InterpreterErr> {
         let mut subvalue = self.evaluate_expr_prime(expression)?;
 
         for suffix in suffixes {
@@ -284,8 +288,8 @@ impl Interpreter {
         Ok(subvalue)
     }
 
-    fn evaluate_binary_infix_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::BinopInfix, Box<expression::ExprPrime>)>) -> Result<f32, InterpreterErr> {
-        let mut value: f32 = self.evaluate_expr_prime(first_child)?;
+    fn evaluate_binary_infix_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::BinopInfix, Box<expression::ExprPrime>)>) -> Result<f64, InterpreterErr> {
+        let mut value: f64 = self.evaluate_expr_prime(first_child)?;
 
         for (operator, sibling_expr) in siblings {
             let sibling_value = self.evaluate_expr_prime(*sibling_expr)?;
@@ -303,8 +307,8 @@ impl Interpreter {
         Ok(value)
     }
 
-    fn evaluate_binary_infix_function_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::IdToken, Box<expression::ExprPrime>)>) -> Result<f32, InterpreterErr> {
-        let mut value: f32 = self.evaluate_expr_prime(first_child)?;
+    fn evaluate_binary_infix_function_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::IdToken, Box<expression::ExprPrime>)>) -> Result<f64, InterpreterErr> {
+        let mut value: f64 = self.evaluate_expr_prime(first_child)?;
 
         for (binfunc, sibling_expr) in siblings {
             value = self.evaluate_func(expression::Func::FuncWithArgs(binfunc, vec![
@@ -318,91 +322,91 @@ impl Interpreter {
 
 }
 
-fn factorial(n: f32) -> Result<f32, InterpreterErr> {
-    if n == 0_f32 {
-        Ok(1_f32)
+fn factorial(n: f64) -> Result<f64, InterpreterErr> {
+    if n == 0_f64 {
+        Ok(1_f64)
     }
-    else if n < 0_f32 {
+    else if n < 0_f64 {
         Err(InterpreterErr::new("Cannot apply factorial operator to negative value."))
     }
     else if n != n.round() {
         Err(InterpreterErr::new("Cannot apply factorial operator to floating point value."))
     }
     else {
-        Ok(n * factorial(n - 1_f32)?)
+        Ok(n * factorial(n - 1_f64)?)
     }
 }
 
-// fn modulo(n: f32, m: f32) -> Result<f32, InterpreterErr> {
+// fn modulo(n: f64, m: f64) -> Result<f64, InterpreterErr> {
 //     todo!();
 // }
 
-fn random() -> Result<f32, InterpreterErr> {
-    Ok(rand::thread_rng().gen::<f32>())
+fn random() -> Result<f64, InterpreterErr> {
+    Ok(rand::thread_rng().gen::<f64>())
 }
 
-fn random_range(min: f32, max: f32) -> Result<f32, InterpreterErr> {
+fn random_range(min: f64, max: f64) -> Result<f64, InterpreterErr> {
     Ok(rand::thread_rng().gen_range(min..max))
 }
 
-fn random_range_inc(min: f32, max: f32) -> Result<f32, InterpreterErr> {
+fn random_range_inc(min: f64, max: f64) -> Result<f64, InterpreterErr> {
     Ok(rand::thread_rng().gen_range(min..=max))
 }
 
-fn add_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
-    let maybe_value: Option<f32> = values.iter()
+fn add_all(values: Vec<f64>) -> Result<f64, InterpreterErr> {
+    let maybe_value: Option<f64> = values.iter()
     .copied()
     .reduce(|a, b| a + b);
 
-    Ok(maybe_value.unwrap_or(0_f32))
+    Ok(maybe_value.unwrap_or(0_f64))
 }
 
-fn sub_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
-    let maybe_value: Option<f32> = values.iter()
+fn sub_all(values: Vec<f64>) -> Result<f64, InterpreterErr> {
+    let maybe_value: Option<f64> = values.iter()
     .copied()
     .reduce(|a, b| a - b);
 
-    Ok(maybe_value.unwrap_or(0_f32))
+    Ok(maybe_value.unwrap_or(0_f64))
 }
 
-fn mult_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
-    let maybe_value: Option<f32> = values.iter()
+fn mult_all(values: Vec<f64>) -> Result<f64, InterpreterErr> {
+    let maybe_value: Option<f64> = values.iter()
     .copied()
     .reduce(|a, b| a * b);
 
-    Ok(maybe_value.unwrap_or(0_f32))
+    Ok(maybe_value.unwrap_or(0_f64))
 }
 
-fn div_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
-    let maybe_value: Option<f32> = values.iter()
+fn div_all(values: Vec<f64>) -> Result<f64, InterpreterErr> {
+    let maybe_value: Option<f64> = values.iter()
     .copied()
     .reduce(|a, b| a / b);
 
-    Ok(maybe_value.unwrap_or(0_f32))
+    Ok(maybe_value.unwrap_or(0_f64))
 }
 
-fn rem_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
-    let maybe_value: Option<f32> = values.iter()
+fn rem_all(values: Vec<f64>) -> Result<f64, InterpreterErr> {
+    let maybe_value: Option<f64> = values.iter()
     .copied()
     .reduce(|a, b| a % b);
 
-    Ok(maybe_value.unwrap_or(0_f32))
+    Ok(maybe_value.unwrap_or(0_f64))
 }
 
-fn max_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
-    let maybe_value: Option<f32> = values.iter()
+fn max_all(values: Vec<f64>) -> Result<f64, InterpreterErr> {
+    let maybe_value: Option<f64> = values.iter()
     .copied()
-    .reduce(f32::max);
+    .reduce(f64::max);
 
-    Ok(maybe_value.unwrap_or(0_f32))
+    Ok(maybe_value.unwrap_or(0_f64))
 }
 
-fn min_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
-    let maybe_value: Option<f32> = values.iter()
+fn min_all(values: Vec<f64>) -> Result<f64, InterpreterErr> {
+    let maybe_value: Option<f64> = values.iter()
     .copied()
-    .reduce(f32::min);
+    .reduce(f64::min);
 
-    Ok(maybe_value.unwrap_or(0_f32))
+    Ok(maybe_value.unwrap_or(0_f64))
 }
 
 lazy_static! {
@@ -415,51 +419,51 @@ lazy_static! {
     static ref MAX: Function = Function::new(FunctionArgs::Variable(max_all));
     static ref MIN: Function = Function::new(FunctionArgs::Variable(min_all));
 
-    static ref NEG: Function = Function::new(FunctionArgs::One(|n: f32| Ok(-n)));
+    static ref NEG: Function = Function::new(FunctionArgs::One(|n: f64| Ok(-n)));
     static ref FAC: Function = Function::new(FunctionArgs::One(factorial));
     
-    static ref CEIL: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::ceil(n))));
-    static ref FLOOR: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::floor(n))));
-    static ref ROUND: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::round(n))));
+    static ref CEIL: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::ceil(n))));
+    static ref FLOOR: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::floor(n))));
+    static ref ROUND: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::round(n))));
     
-    static ref FRACT: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::fract(n))));
+    static ref FRACT: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::fract(n))));
 
-    static ref SQRT: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::sqrt(n))));
-    static ref EXP: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::exp(n))));
-    static ref EXP2: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::exp2(n))));
-    static ref POW: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(f32::powf(a, b))));
+    static ref SQRT: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::sqrt(n))));
+    static ref EXP: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::exp(n))));
+    static ref EXP2: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::exp2(n))));
+    static ref POW: Function = Function::new(FunctionArgs::Two(|a: f64, b: f64| Ok(f64::powf(a, b))));
 
-    static ref SIN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::sin(n))));
-    static ref COS: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::cos(n))));
-    static ref TAN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::tan(n))));
+    static ref SIN: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::sin(n))));
+    static ref COS: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::cos(n))));
+    static ref TAN: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::tan(n))));
 
-    static ref ASIN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::asin(n))));
-    static ref ACOS: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::acos(n))));
-    static ref ATAN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::atan(n))));
+    static ref ASIN: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::asin(n))));
+    static ref ACOS: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::acos(n))));
+    static ref ATAN: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::atan(n))));
 
-    static ref CSC: Function = Function::new(FunctionArgs::One(|n: f32| Ok(1_f32 / f32::sin(n))));
-    static ref SEC: Function = Function::new(FunctionArgs::One(|n: f32| Ok(1_f32 / f32::cos(n))));
-    static ref COT: Function = Function::new(FunctionArgs::One(|n: f32| Ok(1_f32 / f32::tan(n))));
+    static ref CSC: Function = Function::new(FunctionArgs::One(|n: f64| Ok(1_f64 / f64::sin(n))));
+    static ref SEC: Function = Function::new(FunctionArgs::One(|n: f64| Ok(1_f64 / f64::cos(n))));
+    static ref COT: Function = Function::new(FunctionArgs::One(|n: f64| Ok(1_f64 / f64::tan(n))));
 
-    static ref ACSC: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::asin(1_f32 / n))));
-    static ref ASEC: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::acos(1_f32 / n))));
-    static ref ACOT: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::atan(1_f32 / n))));
+    static ref ACSC: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::asin(1_f64 / n))));
+    static ref ASEC: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::acos(1_f64 / n))));
+    static ref ACOT: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::atan(1_f64 / n))));
 
-    static ref SINH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::sinh(n))));
-    static ref COSH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::cosh(n))));
-    static ref TANH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::tanh(n))));
+    static ref SINH: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::sinh(n))));
+    static ref COSH: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::cosh(n))));
+    static ref TANH: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::tanh(n))));
 
-    static ref ASINH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::asinh(n))));
-    static ref ACOSH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::acosh(n))));
-    static ref ATANH: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::atanh(n))));
+    static ref ASINH: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::asinh(n))));
+    static ref ACOSH: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::acosh(n))));
+    static ref ATANH: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::atanh(n))));
 
-    static ref LOG: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::log10(n))));
-    static ref LOG2: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::log2(n))));
-    static ref LOGE: Function = Function::new(FunctionArgs::One(|n: f32| Ok(n.log(std::f32::consts::E))));
-    static ref LOGB: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(f32::log(a, b))));
+    static ref LOG: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::log10(n))));
+    static ref LOG2: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::log2(n))));
+    static ref LN: Function = Function::new(FunctionArgs::One(|n: f64| Ok(n.log(std::f64::consts::E))));
+    static ref LOGB: Function = Function::new(FunctionArgs::Two(|a: f64, b: f64| Ok(f64::log(a, b))));
 
-    static ref SIGN: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::signum(n))));
-    static ref COND: Function = Function::new(FunctionArgs::Four(|a: f32, b: f32, c: f32, d: f32| {
+    static ref SIGN: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::signum(n))));
+    static ref COND: Function = Function::new(FunctionArgs::Four(|a: f64, b: f64, c: f64, d: f64| {
         Ok(if a == b {
             c
         }
@@ -472,6 +476,6 @@ lazy_static! {
     static ref RRAND: Function = Function::new(FunctionArgs::Two(random_range));
     static ref RRANDI: Function = Function::new(FunctionArgs::Two(random_range_inc));
 
-    static ref E: Function = Function::new(FunctionArgs::None(|| Ok(std::f32::consts::E)));
-    static ref PI: Function = Function::new(FunctionArgs::None(|| Ok(std::f32::consts::PI)));
+    static ref E: Function = Function::new(FunctionArgs::None(|| Ok(std::f64::consts::E)));
+    static ref PI: Function = Function::new(FunctionArgs::None(|| Ok(std::f64::consts::PI)));
 }
