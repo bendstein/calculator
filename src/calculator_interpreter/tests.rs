@@ -50,25 +50,6 @@ fn nan_test(input: &str) {
     }
 }
 
-/**
- * The provided input, should not be parsed and evaluated
- * to NaN
- */
-fn not_nan_test(input: &str, repeat: usize) {
-    let interpreter = Interpreter::default();
-    
-    for _ in 0_usize..repeat {
-        match interpreter.evaluate_string(input) {
-            Ok(result) => {
-                assert!(!result.is_nan(), "Testing that {result} is a number")
-            },
-            Err(err) => {
-                panic!("{err}")
-            }
-        }
-    }   
-}
-
 fn in_range_test(input: &str, range: Range<f32>, repeat: usize) {
     let interpreter = Interpreter::default();
 
@@ -1201,12 +1182,13 @@ fn infix_function_3() {
 
 #[test]
 /**
- * Test that random function returns a number
+ * Test that random function returns a number between 0 and 1
  */
 fn rand_0() {
     let repeat: usize = 100_usize;
+    let range = 0_f32..1_f32;
     let input: &str = "rand()";
-    not_nan_test(input, repeat)
+    in_range_test(input, range, repeat)
 }
 
 #[test]
