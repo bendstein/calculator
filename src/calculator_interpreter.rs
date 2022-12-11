@@ -349,18 +349,74 @@ fn random_range_inc(min: f32, max: f32) -> Result<f32, InterpreterErr> {
     Ok(rand::thread_rng().gen_range(min..=max))
 }
 
+fn add_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
+    let maybe_value: Option<f32> = values.iter()
+    .copied()
+    .reduce(|a, b| a + b);
+
+    Ok(maybe_value.unwrap_or(0_f32))
+}
+
+fn sub_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
+    let maybe_value: Option<f32> = values.iter()
+    .copied()
+    .reduce(|a, b| a - b);
+
+    Ok(maybe_value.unwrap_or(0_f32))
+}
+
+fn mult_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
+    let maybe_value: Option<f32> = values.iter()
+    .copied()
+    .reduce(|a, b| a * b);
+
+    Ok(maybe_value.unwrap_or(0_f32))
+}
+
+fn div_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
+    let maybe_value: Option<f32> = values.iter()
+    .copied()
+    .reduce(|a, b| a / b);
+
+    Ok(maybe_value.unwrap_or(0_f32))
+}
+
+fn rem_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
+    let maybe_value: Option<f32> = values.iter()
+    .copied()
+    .reduce(|a, b| a % b);
+
+    Ok(maybe_value.unwrap_or(0_f32))
+}
+
+fn max_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
+    let maybe_value: Option<f32> = values.iter()
+    .copied()
+    .reduce(f32::max);
+
+    Ok(maybe_value.unwrap_or(0_f32))
+}
+
+fn min_all(values: Vec<f32>) -> Result<f32, InterpreterErr> {
+    let maybe_value: Option<f32> = values.iter()
+    .copied()
+    .reduce(f32::min);
+
+    Ok(maybe_value.unwrap_or(0_f32))
+}
+
 lazy_static! {
-    static ref ADD: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a + b)));
-    static ref SUB: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a - b)));
-    static ref MULT: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a * b)));
-    static ref DIV: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a / b)));
-    static ref REM: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(a % b)));
+    static ref ADD: Function = Function::new(FunctionArgs::Variable(add_all));
+    static ref SUB: Function = Function::new(FunctionArgs::Variable(sub_all));
+    static ref MULT: Function = Function::new(FunctionArgs::Variable(mult_all));
+    static ref DIV: Function = Function::new(FunctionArgs::Variable(div_all));
+    static ref REM: Function = Function::new(FunctionArgs::Variable(rem_all));
+
+    static ref MAX: Function = Function::new(FunctionArgs::Variable(max_all));
+    static ref MIN: Function = Function::new(FunctionArgs::Variable(min_all));
 
     static ref NEG: Function = Function::new(FunctionArgs::One(|n: f32| Ok(-n)));
     static ref FAC: Function = Function::new(FunctionArgs::One(factorial));
-
-    static ref MAX: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(f32::max(a, b))));
-    static ref MIN: Function = Function::new(FunctionArgs::Two(|a: f32, b: f32| Ok(f32::min(a, b))));
     
     static ref CEIL: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::ceil(n))));
     static ref FLOOR: Function = Function::new(FunctionArgs::One(|n: f32| Ok(f32::floor(n))));

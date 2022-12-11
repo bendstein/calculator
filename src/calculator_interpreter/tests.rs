@@ -638,11 +638,31 @@ fn func_add() {
 
 #[test]
 /**
+ * Test that add function evaluates as expected when provided several arguments
+ */
+fn func_add_var() {
+    let expected: f32 = 14.01_f32;
+    let input: &str = "add(-2, 4, 1.01, 11)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
  * Test that sub function evaluates as expected
  */
 fn func_sub() {
     let expected: f32 = 19_f32;
     let input: &str = "sub(15, -4)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that sub function evaluates as expected when provided several arguments
+ */
+fn func_sub_var() {
+    let expected: f32 = 12.9_f32;
+    let input: &str = "sub(15, -2, 3.1, 0, 1)";
     default_test(input, expected);
 }
 
@@ -658,6 +678,16 @@ fn func_mult() {
 
 #[test]
 /**
+ * Test that mult function evaluates as expected when provided several arguments
+ */
+fn func_mult_var() {
+    let expected: f32 = 19.2_f32;
+    let input: &str = "mult(4, 2, 6, 0.4)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
  * Test that div function evaluates as expected
  */
 fn func_div() {
@@ -668,11 +698,32 @@ fn func_div() {
 
 #[test]
 /**
+ * Test that div function evaluates as expected when provided several arguments
+ */
+fn func_div_var() {
+    let expected: f32 = 1.25_f32;
+    let input: &str = "div(25, 10, 0.25, 8)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
  * Test that rem function evaluates as expected
  */
 fn func_rem() {
     let expected: f32 = 4_f32;
     let input: &str = "rem(9, 5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that rem function evaluates as expected when
+ * provided several arguments
+ */
+fn func_rem_var() {
+    let expected: f32 = 1_f32;
+    let input: &str = "rem(9, 5, 6, 3)";
     default_test(input, expected);
 }
 
@@ -828,6 +879,17 @@ fn fn_max_1() {
 
 #[test]
 /**
+ * Test that max function evaluates as expected when
+ * several args are provided
+ */
+fn fn_max_var() {
+    let expected: f32 = 5_f32;
+    let input: &str = "max(5, 4.99, -2, -2.01, 3, 4)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
  * Test that min function evaluates as expected
  */
 fn fn_min_0() {
@@ -846,6 +908,16 @@ fn fn_min_1() {
     default_test(input, expected);
 }
 
+#[test]
+/**
+ * Test that min function evaluates as expected when
+ * several args are provided
+ */
+fn fn_min_var() {
+    let expected: f32 = -2.01_f32;
+    let input: &str = "min(5, 4.99, -2, -2.01, 3, 4)";
+    default_test(input, expected);
+}
 
 #[test]
 /**
