@@ -36,4 +36,5 @@ Examples:
 
   - Report error reasons during parsing.
     - This is surprisingly difficult, because the way I am handling my parsing makes it difficult to determine where the error in the expression actually is.
+    - Add *sync* tokens?
   - Implement GUI?
