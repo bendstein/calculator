@@ -10,6 +10,9 @@ const EXIT_COMMAND: &str = ":exit";
 const CLEAR_COMMAND: &str = ":clear";
 
 fn main() {
+    //Set to use virtual terminal so that control characters work on windows
+    _ = colored::control::set_virtual_terminal(true);
+
     println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, or '{EXIT_COMMAND}' to exit.");
 
     loop {
