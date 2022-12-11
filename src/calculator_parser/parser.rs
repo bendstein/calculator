@@ -43,12 +43,12 @@ impl<'a> Parser<'a> {
                         Err(err)
                     }
                     else {
-                        Err(ParserErr::err("Expected an expression."))
+                        Err(ParserErr::err(format!("Unexpected token '{}'.", self.token_at(self.lah)).as_str()))
                     }
                 },
                 Ok(expr) => {
                     if self.lah < self.tokens.len() {
-                        Err(ParserErr::new("An unknown syntax error has occurred."))
+                        Err(ParserErr::err(format!("Unexpected token '{}'.", self.token_at(self.lah)).as_str()))
                     }
                     else {
                         Ok(xpr::Expr::ExprPrime(Box::new(expr)))
@@ -137,7 +137,7 @@ impl<'a> Parser<'a> {
                     return Err(expr_2_suffix_err);
                 }
                 else {
-                    return Err(ParserErr::err(format!("Expected expression after function '{}'", id.value).as_str()))
+                    return Err(ParserErr::err(format!("Expected expression after function '{}'.", id.value).as_str()))
                 }
             }
 
@@ -634,14 +634,14 @@ impl<'a> Parser<'a> {
                             true => String::from(""),
                             false => {
                                 if func_args.len() == 1 {
-                                    func_args[0].to_string()
+                                    format!("{},", func_args[0])
                                 }
                                 else {
                                     let arg_strings: Vec<String> = func_args.iter()
                                     .map(|arg| arg.to_string())
                                     .collect();
 
-                                    arg_strings.join(", ")
+                                    format!("{},", arg_strings.join(", "))
                                 }
                             }
                         };
