@@ -1026,13 +1026,53 @@ fn fn_acosh() {
     let input: &str = "acosh(1)";
     default_test(input, expected);
 }
-#[test]
 
+#[test]
 /**
  * Test that atanh function evaluates as expected
  */
 fn fn_atanh() {
     let expected: f32 = f32::atanh(0.5_f32);
     let input: &str = "atanh(0.5)";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that infix functions evaluate as expected
+ */
+fn infix_function_0() {
+    let expected: f32 = 30_f32;
+    let input: &str = "5 mult 6";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that infix functions evaluate as expected
+ */
+fn infix_function_1() {
+    let expected: f32 = 31_f32;
+    let input: &str = "5^2 add 3!";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that infix functions evaluate as expected
+ */
+fn infix_function_2() {
+    let expected: f32 = 31_f32;
+    let input: &str = "5^2 add 3!";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that infix functions evaluate as expected
+ */
+fn infix_function_3() {
+    let expected: f32 = 24_f32;
+    let input: &str = "(sqrt(2^(2 add 4)) div 2)!";
     default_test(input, expected);
 }

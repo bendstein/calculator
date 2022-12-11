@@ -18,16 +18,16 @@ fn main() {
     //     }
     // }
 
-    // let interpreter_tests = vec![
-    //     String::from("5 exp 6")
-    // ];
+    let interpreter_tests = vec![
+        String::from("")
+    ];
 
-    // for test in interpreter_tests {
-    //     println!("Interpreter Test: '{test}'");
+    for test in interpreter_tests {
+        println!("Interpreter Test: '{test}'");
 
-    //     match calculator_interpreter::Interpreter::default().evaluate_string(&test) {
-    //         Ok(value) => println!(" -- Result: '{value}' --"),
-    //         Err(interpreter_err) => eprintln!(" -- Error: '{interpreter_err}' --")
-    //     }
-    // }
+        match calculator_interpreter::Interpreter::default().evaluate_string(&test) {
+            Ok(value) => println!(" -- Result: '{value}' --"),
+            Err(interpreter_err) => eprintln!(" -- Error: '{interpreter_err}' --")
+        }
+    }
 }

@@ -363,6 +363,36 @@ fn multiple_arg_function_1() {
 }
 
 #[test]
+/**
+ * Test that infix functions are parsed properly
+ */
+fn infix_function_0() {
+    const EXPECTED: &str = "5 add 6";
+    let input: &str = "5 add 6";
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that infix functions are parsed properly
+ */
+fn infix_function_1() {
+    const EXPECTED: &str = "[5 * 2] add [3 ^ 1]";
+    let input: &str = "5 * 2 add 3 ^ 1";
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that infix functions are parsed properly
+ */
+fn infix_function_2() {
+    const EXPECTED: &str = "5 * [[2 add 3] ^ 1]";
+    let input: &str = "5 * (2 add 3) ^ 1";
+    default_test(input, EXPECTED);
+}
+
+#[test]
 #[should_panic]
 /**
  * Test that the following is invalid syntax
