@@ -1,5 +1,5 @@
 use super::calculator_parser::{parser, expression};
-use std::{collections::HashMap};
+use std::{collections::HashMap, cell::RefCell};
 
 pub mod interpreter_err;
 
@@ -55,9 +55,10 @@ impl Default for Function {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Interpreter {
-    functions: HashMap<String, Function>
+    functions: HashMap<String, Function>,
+    history: RefCell<Vec<f64>>
 }
 
 impl Default for Interpreter {
@@ -115,16 +116,35 @@ impl Default for Interpreter {
                 ("E".to_string(), E.clone()),
                 ("PI".to_string(), PI.clone()),
             ].into_iter()
-            .collect()
+            .collect(),
+            history: RefCell::new(Vec::new())
         }
     }
 }
 
 impl Interpreter {
+    pub fn clear_stack(&self) {
+        let mut history = self.history.borrow_mut();
+        history.clear();
+    }
+
     pub fn evaluate(&self, expression: expression::Expr) -> Result<f64, InterpreterErr> {
-        match expression {
+        let evaluated_result = match expression {
             expression::Expr::None => Ok(0_f64),
             expression::Expr::ExprPrime(expr_prime) => self.evaluate_expr_prime(*expr_prime)
+        };
+
+        if let Ok(evaluated) = evaluated_result {
+            let mut history = self.history.borrow_mut();
+
+            if history.is_empty() || *history.last().unwrap() != evaluated {
+                history.push(evaluated);
+            }
+
+            Ok(evaluated)
+        }
+        else {
+            evaluated_result
         }
     }
 
@@ -140,6 +160,7 @@ impl Interpreter {
     fn evaluate_expr_prime(&self, expression: expression::ExprPrime) -> Result<f64, InterpreterErr> {
         match expression {
             expression::ExprPrime::Number(n) => self.evaluate_number(n),
+            expression::ExprPrime::History(h) => self.evaluate_hist(h),
             expression::ExprPrime::Func(f) => self.evaluate_func(f),
             expression::ExprPrime::Id(_id) => todo!(),
             expression::ExprPrime::UnopPrefixesExpression(prefix, subexpr) => self.evaluate_unary_prefixes(prefix, *subexpr),
@@ -261,6 +282,20 @@ impl Interpreter {
                 let evaluated_args = evaluate_args(self, args)?;
                 func(evaluated_args)
             },
+        }
+    }
+
+    fn evaluate_hist(&self, expression: expression::HistoryToken) -> Result<f64, InterpreterErr> {
+        match self.history.try_borrow() {
+            Err(borrow_error) => Err(InterpreterErr::new(format!("Failed to access past results: {borrow_error}").as_str())),
+            Ok(history) => {
+                if history.len() <= expression.value {
+                    Err(InterpreterErr::new(format!("History entry {} does not exist.", expression.value).as_str()))
+                }
+                else {
+                    Ok(history[history.len() - (expression.value + 1)])
+                }
+            }
         }
     }
 

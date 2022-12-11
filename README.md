@@ -5,6 +5,7 @@ Can be executed through the terminal, starting a loop allowing the user to enter
 Additionally:
  - Entering ':exit', the loop will break and the program will exit.
  - Entering ':clear' will clear the screen. 
+ - Entering ':clear-hist' will clear the calculator's history.
 
 ### TODO:
 

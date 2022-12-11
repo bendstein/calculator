@@ -8,12 +8,15 @@ pub mod calculator_interpreter;
 
 const EXIT_COMMAND: &str = ":exit";
 const CLEAR_COMMAND: &str = ":clear";
+const CLEAR_HISTORY_COMMAND: &str = ":clear-hist";
 
 fn main() {
     //Set to use virtual terminal so that control characters work on windows
     _ = colored::control::set_virtual_terminal(true);
 
-    println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, or '{EXIT_COMMAND}' to exit.");
+    let interpreter = calculator_interpreter::Interpreter::default();
+
+    println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, '{CLEAR_HISTORY_COMMAND}' to clear result history, or '{EXIT_COMMAND}' to exit.");
 
     loop {
         print!("> ");
@@ -45,6 +48,10 @@ fn main() {
             print!("{esc}c", esc = 27 as char);
             continue;
         }
+        else if input.eq_ignore_ascii_case(CLEAR_HISTORY_COMMAND) {
+            interpreter.clear_stack();
+            continue;
+        }
 
         let mut parser = calculator_parser::parser::Parser::new(&input);
 
@@ -56,7 +63,7 @@ fn main() {
             }
         };
 
-        let evaluated = match calculator_interpreter::Interpreter::default().evaluate(parsed) {
+        let evaluated = match interpreter.evaluate(parsed) {
             Ok(value) => value,
             Err(e) => {
                 eprintln!("An error occurred while evaluating expression '{input}': {e}");

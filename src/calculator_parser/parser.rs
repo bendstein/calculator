@@ -411,6 +411,23 @@ impl<'a> Parser<'a> {
         };
 
         if result.is_none() {
+            //Failed to match. Try to match history stack access.
+            let history_result = self.history();
+
+            result = match history_result {
+                Ok(hist) => Some(Ok(xpr::ExprPrime::History(hist))),
+                Err(err) => {
+                    if err.propagate() {
+                        return Err(err);
+                    }
+                    else {
+                        None
+                    }
+                }
+            };
+        }
+
+        if result.is_none() {
             //Failed to match. Try to match function.
             let func_result = self.func();
 
@@ -748,6 +765,51 @@ impl<'a> Parser<'a> {
         self.lah = current_lah;
 
         Ok(xpr::IdToken::new(concatenated.as_str()))
+    }
+
+    fn history(&mut self) -> Result<xpr::HistoryToken, ParserErr> {
+        let initial_lah = self.lah;
+        
+        //Try to match the history stack access symbol
+        let token = self.token_at(initial_lah);
+
+        //History stack access symbol is required. Rollback and return error if not present.
+        if !xpr::Token::History(0_usize).get_terminal().match_symbol(token) {
+            self.lah = initial_lah;
+            return Err(ParserErr::default());
+        }
+
+        let mut current_lah = initial_lah + 1;
+        let mut digits: Vec<&str> = Vec::new();
+
+        //Try to match 1 or more digits
+        loop {
+            let current_token = self.token_at(current_lah);
+
+            if terminals::DIGIT.match_symbol(current_token) {
+                current_lah += 1;
+                digits.push(current_token);
+                continue;
+            }
+
+            break;
+        };
+
+        //Make sure at least one digit is present
+        if digits.is_empty() {
+            return Err(ParserErr::err(format!("Expected digit after history access token '{token}'").as_str()));
+        }
+        
+        let concatenated = digits.join("");
+
+        let parsed= concatenated.parse::<usize>();
+
+        if let Err(_parse_int_err) = parsed {
+            return Err(ParserErr::err(format!("Failed to parse number '{concatenated}'.").as_str()));
+        }
+
+        self.lah = current_lah;
+        Ok(xpr::HistoryToken::new(parsed.unwrap()))
     }
 
     fn paren_expression_paren(&mut self) -> Result<xpr::ExprPrime, ParserErr> {

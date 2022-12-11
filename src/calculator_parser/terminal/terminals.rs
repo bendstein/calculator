@@ -16,6 +16,7 @@ const OP_PAR_O_STR: &str = "(";
 const OP_PAR_C_STR: &str = ")";
 const DELIMITER_STR: &str = ",";
 const UNDERSCORE_STR: &str = "_";
+const HISTORY_STR: &str = "$";
 
 const PI_CONST_STR: &str = "PI";
 const E_CONST_STR: &str = "E";
@@ -89,6 +90,11 @@ lazy_static! {
      * Function argument delimiter
      */
     pub static ref UNDERSCORE: Terminal = Terminal::Literal(String::from(UNDERSCORE_STR));
+
+    /**
+     * History stack access
+     */
+    pub static ref HISTORY: Terminal = Terminal::Literal(String::from(HISTORY_STR));
 
     /**
      * Constant PI (Archimedes' Constant)

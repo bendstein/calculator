@@ -63,7 +63,8 @@ pub enum Token {
     Delimiter,
     Number(f64),
     Id(String),
-    Constant(Constant)
+    Constant(Constant),
+    History(usize)
 }
 
 impl Token {
@@ -81,7 +82,8 @@ impl Token {
             Token::Delimiter => &terminals::DELIMITER,
             Token::Number(_) => &terminals::DIGIT,
             Token::Id(_) => &terminals::LETTER,
-            Token::Constant(c) => c.get_terminal()
+            Token::Constant(c) => c.get_terminal(),
+            Token::History(_) => &terminals::HISTORY
         }
     }
 }
@@ -125,6 +127,7 @@ impl Display for Expr {
 #[derive(Debug, PartialEq, Clone)]
 pub enum ExprPrime {
     Number(NumberToken),
+    History(HistoryToken),
     Func(Func),
     Id(IdToken),
     UnopPrefixesExpression(Vec<UnopPrefix>, Box<ExprPrime>),
@@ -146,7 +149,7 @@ impl Display for ExprPrime {
         }
 
         fn subexpr_str(subexpr: &ExprPrime, _parent_type: SubexprStrParentType) -> String {
-            if !matches!(subexpr, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_)) {
+            if !matches!(subexpr, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_) | ExprPrime::History(_)) {
 
                 // match parent_type {
                 //     SubexprStrParentType::UnopPrefixesExpression => {
@@ -176,6 +179,7 @@ impl Display for ExprPrime {
 
         let to_print = match self {
             Self::Number(n) => n.get_token().to_string(),
+            Self::History(n) => format!("{}{}", n.get_token(), n.value),
             Self::Func(func) => func.to_string(),
             Self::Id(id) => id.get_token().to_string(),
             Self::UnopPrefixesExpression(prefix, expr) => {
@@ -516,6 +520,10 @@ pub struct DelimiterToken {}
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct NumberToken {
     pub value: f64
+}
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct HistoryToken {
+    pub value: usize
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct IdToken {
@@ -873,6 +881,40 @@ impl TryFrom<Token> for NumberToken {
 		match value {
 			Token::Number(value) => Ok(NumberToken { value }),
 			_ => Err("The passed value is not an Number token.")
+		}
+	}
+}
+
+impl HistoryToken {
+    pub fn new(value: usize) -> Self {
+        Self {
+            value
+        }
+    }
+    pub fn get_token(&self) -> Token {
+        Token::History(self.value)
+    }
+}
+
+impl Default for HistoryToken {
+    fn default() -> Self {
+        Self::new(0_usize)
+    }
+}
+
+impl From<HistoryToken> for Token {
+	fn from(value: HistoryToken) -> Self {
+		Token::History(value.value)
+	}
+}
+
+impl TryFrom<Token> for HistoryToken {
+	type Error = &'static str;
+
+	fn try_from(value: Token) -> Result<Self, Self::Error> {
+		match value {
+			Token::History(value) => Ok(HistoryToken { value }),
+			_ => Err("The passed value is not a History token.")
 		}
 	}
 }
