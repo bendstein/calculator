@@ -5,7 +5,6 @@ Can be executed through a terminal with the following arguments:
 - help
     - Description: Display application help.
     - Usage: /help
-    - Example: If used as a key-value argument, rather than a flag argument, must be either true or false.
 
 - exp
     - Description: The expression to perform the action on.
@@ -21,10 +20,14 @@ Examples:
 
     > ./calculator_parser "/exp: (6 * 7 + 2)^4"
     3748096
- 
+
+<br />
+	
     > ./calculator_parser "/exp: 5 + 2 * 3 ^ 2 - 1" /action:parse
     Parsed: 5 + [2 * [3 ^ 2]] - 1
 
+<br />
+	
     > ./calculator_parser "/exp: -2 * 4! + max(rrand(0, 25), 2)" /action:both
     Parsed: [[-2] * [4!]] + max(rrand(0, 25), 2)
     -33.538227
