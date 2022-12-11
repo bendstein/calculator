@@ -32,3 +32,8 @@ Examples:
     Parsed: [[-2] * [4!]] + max(rrand(0, 25), 2)
     -33.538227
  
+### TODO:
+
+  - Report error reasons during parsing.
+    - This is surprisingly difficult, because the way I am handling my parsing makes it difficult to determine where the error in the expression actually is.
+  - Implement GUI?
