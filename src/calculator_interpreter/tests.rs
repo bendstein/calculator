@@ -7,9 +7,11 @@ use super::Interpreter;
  * to equal to the expected value
  */
 fn default_test(input: &str, expected: f64) {
+    const THRESHOLD: f64 = 4_f64 * f64::EPSILON;
+
     match Interpreter::default().evaluate_string(input) {
         Ok(result) => {
-            assert!((result - expected).abs() < f64::EPSILON, "Testing equality of {result} and {expected}.")
+            assert!((result - expected).abs() < THRESHOLD, "Testing equality of {result} and {expected}.")
         },
         Err(err) => {
             panic!("{err}")
@@ -1302,4 +1304,154 @@ fn rand_2() {
     let input: &str = "rrandi(12.05, 19)";
     in_range_inc_test(input, range, repeat);
     is_integer_test(input, repeat);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_0() {
+    let expected: f64 = 1_f64;
+    let input: &str = "5 mod 4";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_1() {
+    let expected: f64 = 4_f64;
+    let input: &str = "4 mod 5";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_2() {
+    let expected: f64 = 0_f64;
+    let input: &str = "5 mod 5";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_3() {
+    let expected: f64 = 2_f64;
+    let input: &str = "-3 mod 5";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_4() {
+    let expected: f64 = -2_f64;
+    let input: &str = "3 mod -5";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_5() {
+    let expected: f64 = -3_f64;
+    let input: &str = "-3 mod -5";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_6() {
+    let expected: f64 = 0.5_f64;
+    let input: &str = "0.5 mod 2.1";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_7() {
+    let expected: f64 = 0_f64;
+    let input: &str = "0.5 mod 0.25";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_8() {
+    let input: &str = "0.5 mod 0";
+    nan_test(input)
+}
+
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_9() {
+    let expected: f64 = -0.5_f64;
+    let input: &str = "0.5 mod -1";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_10() {
+    let expected: f64 = 0_f64;
+    let input: &str = "3 mod -1";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_11() {
+    let expected: f64 = -0.8_f64;
+    let input: &str = "5.2 mod -3";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_12() {
+    let expected: f64 = 0.8_f64;
+    let input: &str = "-5.2 mod 3";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_13() {
+    let expected: f64 = -2.2_f64;
+    let input: &str = "-5.2 mod -3";
+    default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that the modulo function outputs as expected
+ */
+fn mod_14() {
+    let expected: f64 = 2.2_f64;
+    let input: &str = "5.2 mod 3";
+    default_test(input, expected);
 }

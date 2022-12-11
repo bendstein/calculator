@@ -73,6 +73,7 @@ impl Default for Interpreter {
                 ("FAC".to_string(), FAC.clone()),
                 ("MAX".to_string(), MAX.clone()),
                 ("MIN".to_string(), MIN.clone()),
+                ("MOD".to_string(), MOD.clone()),
                 ("CEIL".to_string(), CEIL.clone()),
                 ("FLOOR".to_string(), FLOOR.clone()),
                 ("ROUND".to_string(), ROUND.clone()),
@@ -340,9 +341,29 @@ fn factorial(n: f64) -> Result<f64, InterpreterErr> {
     }
 }
 
-// fn modulo(n: f64, m: f64) -> Result<f64, InterpreterErr> {
-//     todo!();
-// }
+
+fn modulo(a: f64, b: f64) -> Result<f64, InterpreterErr> {
+    //If b is 0, a mod b is undefined
+    if b.abs() < f64::EPSILON {
+        Ok(f64::NAN)
+    }
+    //If a is an integer b is -1, a mod b is 0
+    else if (a.fract().abs() < f64::EPSILON) && (b + 1_f64).abs() < f64::EPSILON {
+        Ok(0_f64)
+    }
+    else {
+        let rem = a % b;
+
+        //If a and b have the same sign, a mod b = a % b
+        if a.signum() == b.signum() {
+            Ok(rem)
+        }
+        //Otherwise, a mod b = (a % b) + b
+        else {
+            Ok(rem + b)
+        }
+    }
+}
 
 fn random<T>() -> Result<f64, InterpreterErr>
     where T : Into<f64>, 
@@ -430,6 +451,8 @@ lazy_static! {
 
     static ref MAX: Function = Function::new(FunctionArgs::Variable(max_all));
     static ref MIN: Function = Function::new(FunctionArgs::Variable(min_all));
+
+    static ref MOD: Function = Function::new(FunctionArgs::Two(modulo));
 
     static ref NEG: Function = Function::new(FunctionArgs::One(|n: f64| Ok(-n)));
     static ref FAC: Function = Function::new(FunctionArgs::One(factorial));
