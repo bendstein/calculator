@@ -103,6 +103,9 @@ impl Default for Interpreter {
                 ("LOGB".to_string(), LOGB.clone()),
                 ("LOG2".to_string(), LOG2.clone()),
                 ("LN".to_string(), LN.clone()),
+                ("FRAND".to_string(), FRAND.clone()),
+                ("RFRAND".to_string(), RFRAND.clone()),
+                ("RFRANDI".to_string(), RFRANDI.clone()),
                 ("RAND".to_string(), RAND.clone()),
                 ("RRAND".to_string(), RRAND.clone()),
                 ("RRANDI".to_string(), RRANDI.clone()),
@@ -341,16 +344,25 @@ fn factorial(n: f64) -> Result<f64, InterpreterErr> {
 //     todo!();
 // }
 
-fn random() -> Result<f64, InterpreterErr> {
-    Ok(rand::thread_rng().gen::<f64>())
+fn random<T>() -> Result<f64, InterpreterErr>
+    where T : Into<f64>, 
+    rand::distributions::Standard: rand::distributions::Distribution<T>
+{
+    Ok(rand::thread_rng().gen::<T>().into())
 }
 
-fn random_range(min: f64, max: f64) -> Result<f64, InterpreterErr> {
-    Ok(rand::thread_rng().gen_range(min..max))
+fn random_range<T>(range: std::ops::Range<T>) -> Result<f64, InterpreterErr>
+    where T : Into<f64> + std::cmp::PartialOrd + rand::distributions::uniform::SampleUniform, 
+    rand::distributions::Standard: rand::distributions::Distribution<T>
+{
+    Ok(rand::thread_rng().gen_range(range).into())
 }
 
-fn random_range_inc(min: f64, max: f64) -> Result<f64, InterpreterErr> {
-    Ok(rand::thread_rng().gen_range(min..=max))
+fn random_range_inc<T>(range: std::ops::RangeInclusive<T>) -> Result<f64, InterpreterErr>
+    where T : Into<f64> + std::cmp::PartialOrd + rand::distributions::uniform::SampleUniform, 
+    rand::distributions::Standard: rand::distributions::Distribution<T>
+{
+    Ok(rand::thread_rng().gen_range(range).into())
 }
 
 fn add_all(values: Vec<f64>) -> Result<f64, InterpreterErr> {
@@ -472,9 +484,13 @@ lazy_static! {
         })
     }));
 
-    static ref RAND: Function = Function::new(FunctionArgs::None(random));
-    static ref RRAND: Function = Function::new(FunctionArgs::Two(random_range));
-    static ref RRANDI: Function = Function::new(FunctionArgs::Two(random_range_inc));
+    static ref FRAND: Function = Function::new(FunctionArgs::None(random::<f64>));
+    static ref RFRAND: Function = Function::new(FunctionArgs::Two(|a: f64, b: f64| random_range::<f64>(a..b)));
+    static ref RFRANDI: Function = Function::new(FunctionArgs::Two(|a: f64, b: f64| random_range_inc::<f64>(a..=b)));
+
+    static ref RAND: Function = Function::new(FunctionArgs::None(random::<i32>));
+    static ref RRAND: Function = Function::new(FunctionArgs::Two(|a: f64, b: f64| random_range::<i32>(a.ceil() as i32..b.floor() as i32)));
+    static ref RRANDI: Function = Function::new(FunctionArgs::Two(|a: f64, b: f64| random_range_inc::<i32>(a.ceil() as i32..=b.floor() as i32)));
 
     static ref E: Function = Function::new(FunctionArgs::None(|| Ok(std::f64::consts::E)));
     static ref PI: Function = Function::new(FunctionArgs::None(|| Ok(std::f64::consts::PI)));

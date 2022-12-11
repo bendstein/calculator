@@ -7,7 +7,6 @@ use super::Interpreter;
  * to equal to the expected value
  */
 fn default_test(input: &str, expected: f64) {
-
     match Interpreter::default().evaluate_string(input) {
         Ok(result) => {
             assert!((result - expected).abs() < f64::EPSILON, "Testing equality of {result} and {expected}.")
@@ -78,6 +77,24 @@ fn in_range_inc_test(input: &str, range: RangeInclusive<f64>, repeat: usize) {
             }
         }
     }  
+}
+
+/**
+ * Test if the given input is an integer
+ */
+fn is_integer_test(input: &str, repeat: usize) {
+    let interpreter = Interpreter::default();
+
+    for _ in 0_usize..repeat {
+        match interpreter.evaluate_string(input) {
+            Ok(result) => {
+                assert!(result.fract().abs() < f64::EPSILON, "Testing that {input} is an integer.")
+            },
+            Err(err) => {
+                panic!("{err}")
+            }
+        }
+    }   
 }
 
 /**
@@ -1218,35 +1235,71 @@ fn infix_function_2() {
 
 #[test]
 /**
- * Test that random function returns a number between 0 and 1
+ * Test that random float function returns a number between 0 and 1
  */
-fn rand_0() {
-    let repeat: usize = 100_usize;
+fn frand_0() {
+    let repeat: usize = 500_usize;
     let range = 0_f64..1_f64;
-    let input: &str = "rand()";
+    let input: &str = "frand()";
     in_range_test(input, range, repeat)
 }
 
 #[test]
 /**
- * Test that ranged random function returns a number
+ * Test that ranged random float function returns a number
+ * in the range
+ */
+fn frand_1() {
+    let repeat: usize = 500_usize;
+    let range = 5_f64..12.5_f64;
+    let input: &str = "rfrand(5, 12.5)";
+    in_range_test(input, range, repeat)
+}
+
+#[test]
+/**
+ * Test that inclusive ranged random float function returns a number
+ * in the range
+ */
+fn frand_2() {
+    let repeat: usize = 500_usize;
+    let range = 12.05_f64..=19_f64;
+    let input: &str = "rfrandi(12.05, 19)";
+    in_range_inc_test(input, range, repeat)
+}
+
+#[test]
+/**
+ * Test that random int function returns an integer number
+ */
+fn rand_0() {
+    let repeat: usize = 500_usize;
+    let input: &str = "rand()";
+    is_integer_test(input, repeat)
+}
+
+#[test]
+/**
+ * Test that ranged random int function returns an integer number
  * in the range
  */
 fn rand_1() {
-    let repeat: usize = 100_usize;
+    let repeat: usize = 500_usize;
     let range = 5_f64..12.5_f64;
     let input: &str = "rrand(5, 12.5)";
-    in_range_test(input, range, repeat)
+    in_range_test(input, range, repeat);
+    is_integer_test(input, repeat);
 }
 
 #[test]
 /**
- * Test that inclusive ranged random function returns a number
+ * Test that inclusive ranged random int function returns an integer number
  * in the range
  */
 fn rand_2() {
-    let repeat: usize = 100_usize;
+    let repeat: usize = 500_usize;
     let range = 12.05_f64..=19_f64;
-    let input: &str = "rrand(12.05, 19)";
-    in_range_inc_test(input, range, repeat)
+    let input: &str = "rrandi(12.05, 19)";
+    in_range_inc_test(input, range, repeat);
+    is_integer_test(input, repeat);
 }
