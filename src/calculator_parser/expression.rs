@@ -236,7 +236,7 @@ impl Display for ExprPrime {
                 format!("{}{}{}", subexpr_str(subexpr, SubexprStrParentType::BinaryInfix), space_between, concatenated)
             },
             Self::AccessMem(m) => format!("{}{}", m.get_token(), m.value),
-            Self::StoreMem(m, subexpr) => format!("{}{}{}", m.get_token(), Token::OpSetMem, subexpr_str(subexpr, SubexprStrParentType::StoreMem))
+            Self::StoreMem(m, subexpr) => format!("{}{}{}{}", m.get_token(), m.value, Token::OpSetMem, subexpr_str(subexpr, SubexprStrParentType::StoreMem))
         };
 
         f.write_str(to_print.as_str())

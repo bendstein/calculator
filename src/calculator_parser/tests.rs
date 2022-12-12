@@ -453,6 +453,72 @@ fn constant_2() {
 }
 
 #[test]
+/**
+ * Test that history parses as intended
+ */
+fn history_0() {
+    const EXPECTED: &str = "$0";
+    let input: &str = "$0";
+
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that history parses as intended
+ */
+fn history_1() {
+    const EXPECTED: &str = "5 ^ $2";
+    let input: &str = "5 ^ $2";
+
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that memory access parses as intended
+ */
+fn memory_access_0() {
+    const EXPECTED: &str = "$m0";
+    let input: &str = "$m0";
+
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that memory access parses as intended
+ */
+fn memory_access_1() {
+    const EXPECTED: &str = "ln($m20)";
+    let input: &str = "ln($m20)";
+
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that memory assignment parses as intended
+ */
+fn memory_assign_0() {
+    const EXPECTED: &str = "$m0:[5]";
+    let input: &str = "$m0: 5";
+
+    default_test(input, EXPECTED);
+}
+
+#[test]
+/**
+ * Test that memory assignment parses as intended
+ */
+fn memory_assign_1() {
+    const EXPECTED: &str = "$m0:[5 ^ [$1 + $m0]]";
+    let input: &str = "$m0: 5 ^ ($1 + $m0)";
+
+    default_test(input, EXPECTED);
+}
+
+#[test]
 #[should_panic]
 /**
  * Test that the following is invalid syntax

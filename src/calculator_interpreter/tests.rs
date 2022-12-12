@@ -20,6 +20,31 @@ fn default_test(input: &str, expected: f64) {
 }
 
 /**
+ * Each provided input should be parsed and evaluated
+ * to equal to the expected value
+ */
+fn sequence_test(sequence: Vec<(&str, Option<f64>)>) {
+    const THRESHOLD: f64 = 4_f64 * f64::EPSILON;
+
+    let interpreter = Interpreter::default();
+
+    for (n, (input, expected)) in sequence.iter().enumerate() {
+        match interpreter.evaluate_string(input) {
+            Ok(result) => {
+                match expected {
+                    None => (),
+                    Some(e) => assert!((result - e).abs() < THRESHOLD, "Step {n}: Testing equality of {result} and {e}.")
+                }
+                
+            },
+            Err(err) => {
+                panic!("Step {n}: {err}")
+            }
+        }
+    }   
+}
+
+/**
  * The provided input, should be parsed and evaluated
  * to inf
  */
@@ -1454,4 +1479,61 @@ fn mod_14() {
     let expected: f64 = 2.2_f64;
     let input: &str = "5.2 mod 3";
     default_test(input, expected);
+}
+
+#[test]
+/**
+ * Test that history access evaluates as expected
+ */
+fn history_0() {
+    let seq: Vec<(&str, Option<f64>)> = vec![
+        ("2", Some(2_f64)),
+        ("$0", Some(2_f64)),
+        ("3", Some(3_f64)),
+        ("$0", Some(3_f64)),
+        ("$1", Some(2_f64)),
+        ("$1 + $0 * 5", Some(13_f64)),
+    ];
+    sequence_test(seq);
+}
+
+#[test]
+#[should_panic]
+/**
+ * Test that history access evaluates as expected
+ */
+fn history_1() {
+    let seq: Vec<(&str, Option<f64>)> = vec![
+        ("2", Some(2_f64)),
+        ("$0", Some(2_f64)),
+        ("3", Some(3_f64)),
+        ("$0", Some(3_f64)),
+        ("$1", Some(2_f64)),
+        ("$5", None),
+    ];
+    sequence_test(seq);
+}
+
+#[test]
+/**
+ * Test that memory access/assignment evaluates as expected
+ */
+fn memory_access_0() {
+    let seq: Vec<(&str, Option<f64>)> = vec![
+        ("$m0", Some(0_f64)),
+        ("$m1", Some(0_f64)),
+        ("$m0: 4", Some(4_f64)),
+        ("$m0", Some(4_f64)),
+        ("$m1: 3", Some(3_f64)),
+        ("$m1", Some(3_f64)),
+        ("$m1: 2", Some(2_f64)),
+        ("$m1", Some(2_f64)),
+        ("$m1 * $m0", Some(8_f64)),
+        ("$m1", Some(2_f64)),
+        ("$m0", Some(4_f64)),
+        ("$m1: $m1 * $m0", Some(8_f64)),
+        ("$m1", Some(8_f64)),
+        ("$m0", Some(4_f64)),
+    ];
+    sequence_test(seq);
 }
