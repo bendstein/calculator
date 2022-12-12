@@ -16,7 +16,7 @@ i.e.: '\$0' would fetch the most recent result, whereas '\$5' would fetch the 5t
 
 #### Accessing and Assigning to Memory:
 ----
-Additionally, the calculator's memory can be access using '\$m{n}', where '{n}' is the index of the stored result. A result can be stored in memory using the syntax '\$mn:{expr}', where '{expr}' is the expression whose result should be stored in memory.
+Additionally, the calculator's memory can be accessed using '\$m{n}', where '{n}' is the index of the stored result. A result can be stored in memory using the syntax '\$mn:{expr}', where '{expr}' is the expression whose result should be stored in memory.
 
 i.e.: '\$m5: 3 * 2' would store '6' in memory at index 5, and '\$m5' would fetch '6' from index of memory.
 
