@@ -121,7 +121,7 @@ This calculator has several built-in functions.
  - RFRANDI(a, b)
    - Returns a random floating point number in the range [*a*, *b*].
  - RAND()
-   - Returns a random integer number in the range [*-(2^31)*, *2^31 - 1*].
+   - Returns a random 32-bit signed integer number.
  - RRAND(a, b)
    - Returns a random integer number in the range [*a*, *b*).
  - RRANDI(a, b)
