@@ -9,6 +9,7 @@ pub mod calculator_interpreter;
 const EXIT_COMMAND: &str = ":exit";
 const CLEAR_COMMAND: &str = ":clear";
 const CLEAR_HISTORY_COMMAND: &str = ":clear-hist";
+const CLEAR_MEMORY_COMMAND: &str = ":clear-mem";
 
 fn main() {
     //Set to use virtual terminal so that control characters work on windows
@@ -16,7 +17,7 @@ fn main() {
 
     let interpreter = calculator_interpreter::Interpreter::default();
 
-    println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, '{CLEAR_HISTORY_COMMAND}' to clear result history, or '{EXIT_COMMAND}' to exit.");
+    println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, '{CLEAR_HISTORY_COMMAND}' to clear result history, '{CLEAR_MEMORY_COMMAND}' to clear calculator memory, or '{EXIT_COMMAND}' to exit.");
 
     loop {
         print!("> ");
@@ -50,6 +51,10 @@ fn main() {
         }
         else if input.eq_ignore_ascii_case(CLEAR_HISTORY_COMMAND) {
             interpreter.clear_stack();
+            continue;
+        }
+        else if input.eq_ignore_ascii_case(CLEAR_MEMORY_COMMAND) {
+            interpreter.clear_mem();
             continue;
         }
 

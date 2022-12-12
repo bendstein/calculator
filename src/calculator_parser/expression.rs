@@ -61,10 +61,12 @@ pub enum Token {
     OpParO,
     OpParC,
     Delimiter,
+    OpSetMem,
     Number(f64),
     Id(String),
     Constant(Constant),
-    History(usize)
+    History(usize),
+    Memory(usize)
 }
 
 impl Token {
@@ -80,10 +82,12 @@ impl Token {
             Token::OpParO => &terminals::OP_PAR_O,
             Token::OpParC => &terminals::OP_PAR_C,
             Token::Delimiter => &terminals::DELIMITER,
+            Token::OpSetMem => &terminals::OP_SETMEM,
             Token::Number(_) => &terminals::DIGIT,
             Token::Id(_) => &terminals::LETTER,
             Token::Constant(c) => c.get_terminal(),
-            Token::History(_) => &terminals::HISTORY
+            Token::History(_) => &terminals::HISTORY,
+            Token::Memory(_) => &terminals::MEMORY
         }
     }
 }
@@ -120,6 +124,8 @@ impl Display for Expr {
             Self::ExprPrime(sub_expr) => sub_expr.to_string()
         };
 
+
+
         f.write_str(to_print.as_str())
     }
 }
@@ -130,6 +136,8 @@ pub enum ExprPrime {
     History(HistoryToken),
     Func(Func),
     Id(IdToken),
+    AccessMem(MemoryToken),
+    StoreMem(MemoryToken, Box<ExprPrime>),
     UnopPrefixesExpression(Vec<UnopPrefix>, Box<ExprPrime>),
     UnopSuffixesExpression(Box<ExprPrime>, Vec<UnopSuffix>),
     ParenthesesExpression(Box<ExprPrime>),
@@ -145,11 +153,13 @@ impl Display for ExprPrime {
             UnopPrefix,
             UnopSuffix,
             Parentheses,
-            BinaryInfix
+            BinaryInfix,
+            StoreMem
         }
 
         fn subexpr_str(subexpr: &ExprPrime, _parent_type: SubexprStrParentType) -> String {
-            if !matches!(subexpr, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_) | ExprPrime::History(_)) {
+            if matches!(_parent_type, SubexprStrParentType::StoreMem) || !matches!(subexpr, ExprPrime::Number(_) | ExprPrime::Func(_) | ExprPrime::Id(_) | ExprPrime::ParenthesesExpression(_) 
+                | ExprPrime::History(_) | ExprPrime::AccessMem(_)) {
 
                 // match parent_type {
                 //     SubexprStrParentType::UnopPrefixesExpression => {
@@ -198,8 +208,8 @@ impl Display for ExprPrime {
 
                 format!("{}{}", subexpr_str(expr, SubexprStrParentType::UnopSuffix), suffix_concatenated)
             },
-           Self::ParenthesesExpression(subexpr) => subexpr_str(subexpr, SubexprStrParentType::Parentheses),
-           Self::BinaryInfixExpression(subexpr, suffix) => {
+            Self::ParenthesesExpression(subexpr) => subexpr_str(subexpr, SubexprStrParentType::Parentheses),
+            Self::BinaryInfixExpression(subexpr, suffix) => {
                 let suffix_strings: Vec<String> = suffix.iter()
                     .map(|(binop, suffix_expr)| format!("{} {}", binop, subexpr_str(suffix_expr, SubexprStrParentType::BinaryInfix)))
                     .collect();
@@ -211,20 +221,22 @@ impl Display for ExprPrime {
                 };
 
                 format!("{}{}{}", subexpr_str(subexpr, SubexprStrParentType::BinaryInfix), space_between, concatenated)
-           },
-           Self::BinaryInfixFunctionExpression(subexpr, suffix) => {
-            let suffix_strings: Vec<String> = suffix.iter()
-                .map(|(binfunc, suffix_expr)| format!("{} {}", binfunc.value, subexpr_str(suffix_expr, SubexprStrParentType::BinaryInfix)))
-                .collect();
-            let concatenated = suffix_strings.join(" ");
+            },
+            Self::BinaryInfixFunctionExpression(subexpr, suffix) => {
+                let suffix_strings: Vec<String> = suffix.iter()
+                    .map(|(binfunc, suffix_expr)| format!("{} {}", binfunc.value, subexpr_str(suffix_expr, SubexprStrParentType::BinaryInfix)))
+                    .collect();
+                let concatenated = suffix_strings.join(" ");
 
-            let space_between = match suffix.is_empty() {
-                true => "".to_string(),
-                false => " ".to_string()
-            };
+                let space_between = match suffix.is_empty() {
+                    true => "".to_string(),
+                    false => " ".to_string()
+                };
 
-            format!("{}{}{}", subexpr_str(subexpr, SubexprStrParentType::BinaryInfix), space_between, concatenated)
-       },
+                format!("{}{}{}", subexpr_str(subexpr, SubexprStrParentType::BinaryInfix), space_between, concatenated)
+            },
+            Self::AccessMem(m) => format!("{}{}", m.get_token(), m.value),
+            Self::StoreMem(m, subexpr) => format!("{}{}{}", m.get_token(), Token::OpSetMem, subexpr_str(subexpr, SubexprStrParentType::StoreMem))
         };
 
         f.write_str(to_print.as_str())
@@ -523,6 +535,10 @@ pub struct NumberToken {
 }
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct HistoryToken {
+    pub value: usize
+}
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct MemoryToken {
     pub value: usize
 }
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -915,6 +931,40 @@ impl TryFrom<Token> for HistoryToken {
 		match value {
 			Token::History(value) => Ok(HistoryToken { value }),
 			_ => Err("The passed value is not a History token.")
+		}
+	}
+}
+
+impl MemoryToken {
+    pub fn new(value: usize) -> Self {
+        Self {
+            value
+        }
+    }
+    pub fn get_token(&self) -> Token {
+        Token::Memory(self.value)
+    }
+}
+
+impl Default for MemoryToken {
+    fn default() -> Self {
+        Self::new(0_usize)
+    }
+}
+
+impl From<MemoryToken> for Token {
+	fn from(value: MemoryToken) -> Self {
+		Token::Memory(value.value)
+	}
+}
+
+impl TryFrom<Token> for MemoryToken {
+	type Error = &'static str;
+
+	fn try_from(value: Token) -> Result<Self, Self::Error> {
+		match value {
+			Token::Memory(value) => Ok(MemoryToken { value }),
+			_ => Err("The passed value is not a Memory token.")
 		}
 	}
 }

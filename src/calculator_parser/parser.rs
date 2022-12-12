@@ -1,6 +1,7 @@
 pub mod parsererr;
 
 use unicode_segmentation::{self, UnicodeSegmentation};
+use super::expression::ExprPrime;
 use super::terminal::*;
 use super::expression as xpr;
 use parsererr::*;
@@ -411,11 +412,11 @@ impl<'a> Parser<'a> {
         };
 
         if result.is_none() {
-            //Failed to match. Try to match history stack access.
-            let history_result = self.history();
+            //Failed to match. Try to match history stack/memory access.
+            let history_memory_result = self.history_memory();
 
-            result = match history_result {
-                Ok(hist) => Some(Ok(xpr::ExprPrime::History(hist))),
+            result = match history_memory_result {
+                Ok(hist_mem) => Some(Ok(hist_mem)),
                 Err(err) => {
                     if err.propagate() {
                         return Err(err);
@@ -767,7 +768,7 @@ impl<'a> Parser<'a> {
         Ok(xpr::IdToken::new(concatenated.as_str()))
     }
 
-    fn history(&mut self) -> Result<xpr::HistoryToken, ParserErr> {
+    fn history_memory(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
         let initial_lah = self.lah;
         
         //Try to match the history stack access symbol
@@ -781,6 +782,13 @@ impl<'a> Parser<'a> {
 
         let mut current_lah = initial_lah + 1;
         let mut digits: Vec<&str> = Vec::new();
+
+        let maybe_mem_qualifier = self.token_at(current_lah);
+        let is_memory: bool = terminals::HISTORY_MEMORY_QUALIFIER.match_symbol(maybe_mem_qualifier);
+
+        if is_memory {
+            current_lah += 1;
+        }
 
         //Try to match 1 or more digits
         loop {
@@ -797,7 +805,12 @@ impl<'a> Parser<'a> {
 
         //Make sure at least one digit is present
         if digits.is_empty() {
-            return Err(ParserErr::err(format!("Expected digit after history access token '{token}'").as_str()));
+            if is_memory {
+                return Err(ParserErr::err(format!("Expected digit after memory access token '{}'", terminals::MEMORY.to_string()).as_str()));
+            }
+            else {
+                return Err(ParserErr::err(format!("Expected digit after history access token '{}'", terminals::HISTORY.to_string()).as_str()));
+            }
         }
         
         let concatenated = digits.join("");
@@ -809,7 +822,44 @@ impl<'a> Parser<'a> {
         }
 
         self.lah = current_lah;
-        Ok(xpr::HistoryToken::new(parsed.unwrap()))
+
+        let expr: ExprPrime;
+
+        //If parsed memory token, check if next token is the memory assignment operator
+        if is_memory {
+            let maybe_mem_assignment_token = self.token_at(self.lah);
+
+            if terminals::OP_SETMEM.match_symbol(maybe_mem_assignment_token) {
+                self.lah += 1;
+
+                //Try to get assigned expression
+                let subexpr_result = self.expr_prime();
+
+                if let Err(subexpr_err) = subexpr_result {
+                    if subexpr_err.propagate() {
+                        return Err(subexpr_err);
+                    }
+                    else {
+                        return Err(ParserErr::err(format!("Expected expression after memory assignment '{}{concatenated}{}'.", 
+                            terminals::MEMORY.to_string(), terminals::OP_SETMEM.to_string()).as_str()));
+                    }
+                }
+
+                //Return assignment of expression to memory
+                let subexpr = subexpr_result.unwrap();
+                expr = xpr::ExprPrime::StoreMem(xpr::MemoryToken::new(parsed.unwrap()), Box::new(subexpr));
+            }
+            else {
+                //Return memory access
+                expr = xpr::ExprPrime::AccessMem(xpr::MemoryToken::new(parsed.unwrap()));
+            }
+        }
+        else {
+            //Return history access
+            expr = xpr::ExprPrime::History(xpr::HistoryToken::new(parsed.unwrap()));
+        }
+
+        Ok(expr)
     }
 
     fn paren_expression_paren(&mut self) -> Result<xpr::ExprPrime, ParserErr> {

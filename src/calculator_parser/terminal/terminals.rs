@@ -14,9 +14,13 @@ const OP_EXP_STR: &str = "^";
 const OP_FAC_STR: &str = "!";
 const OP_PAR_O_STR: &str = "(";
 const OP_PAR_C_STR: &str = ")";
+const OP_SETMEM_STR: &str = ":";
 const DELIMITER_STR: &str = ",";
 const UNDERSCORE_STR: &str = "_";
+
 const HISTORY_STR: &str = "$";
+const MEMORY_STR: &str = "$m";
+const HISTORY_MEMORY_QUALIFIER_STR: &str = "m";
 
 const PI_CONST_STR: &str = "PI";
 const E_CONST_STR: &str = "E";
@@ -82,6 +86,11 @@ lazy_static! {
     pub static ref OP_PAR_C: Terminal = Terminal::Literal(String::from(OP_PAR_C_STR));
 
     /**
+     * Set memory
+     */
+    pub static ref OP_SETMEM: Terminal = Terminal::Literal(String::from(OP_SETMEM_STR));
+
+    /**
      * Function argument delimiter
      */
     pub static ref DELIMITER: Terminal = Terminal::Literal(String::from(DELIMITER_STR));
@@ -95,6 +104,16 @@ lazy_static! {
      * History stack access
      */
     pub static ref HISTORY: Terminal = Terminal::Literal(String::from(HISTORY_STR));
+
+    /**
+     * Memory access
+     */
+    pub static ref MEMORY: Terminal = Terminal::Literal(String::from(MEMORY_STR));
+
+    /**
+     * Token that qualifies memory access from history access
+     */
+    pub static ref HISTORY_MEMORY_QUALIFIER: Terminal = Terminal::Literal(String::from(HISTORY_MEMORY_QUALIFIER_STR));
 
     /**
      * Constant PI (Archimedes' Constant)

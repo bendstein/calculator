@@ -58,7 +58,8 @@ impl Default for Function {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Interpreter {
     functions: HashMap<String, Function>,
-    history: RefCell<Vec<f64>>
+    history: RefCell<Vec<f64>>,
+    memory: RefCell<Vec<f64>>
 }
 
 impl Default for Interpreter {
@@ -117,12 +118,19 @@ impl Default for Interpreter {
                 ("PI".to_string(), PI.clone()),
             ].into_iter()
             .collect(),
-            history: RefCell::new(Vec::new())
+            history: RefCell::new(Vec::new()),
+            memory: RefCell::new(vec![0_f64; u8::MAX as usize])
         }
     }
 }
 
 impl Interpreter {
+    pub fn clear_mem(&self) {
+        let mut memory = self.memory.borrow_mut();
+        memory.clear();
+        memory.resize(u8::MAX as usize, 0_f64);
+    }
+
     pub fn clear_stack(&self) {
         let mut history = self.history.borrow_mut();
         history.clear();
@@ -168,6 +176,8 @@ impl Interpreter {
             expression::ExprPrime::ParenthesesExpression(subexpr) => self.evaluate_expr_prime(*subexpr),
             expression::ExprPrime::BinaryInfixExpression(first_child, siblings) => self.evaluate_binary_infix_expression(*first_child, siblings),
             expression::ExprPrime::BinaryInfixFunctionExpression(first_child, siblings) => self.evaluate_binary_infix_function_expression(*first_child, siblings),
+            expression::ExprPrime::AccessMem(m) => self.evaluate_mem(m),
+            expression::ExprPrime::StoreMem(m, subexpr) => self.evaluate_store_mem(m, *subexpr)
         }
     }
 
@@ -295,6 +305,37 @@ impl Interpreter {
                 else {
                     Ok(history[history.len() - (expression.value + 1)])
                 }
+            }
+        }
+    }
+
+    fn evaluate_mem(&self, expression: expression::MemoryToken) -> Result<f64, InterpreterErr> {
+        match self.memory.try_borrow() {
+            Err(borrow_error) => Err(InterpreterErr::new(format!("Failed to access memory: {borrow_error}").as_str())),
+            Ok(memory) => {
+                if memory.len() <= expression.value {
+                    Err(InterpreterErr::new(format!("Memory entry {} does not exist.", expression.value).as_str()))
+                }
+                else {
+                    Ok(memory[expression.value])
+                }
+            }
+        }
+    }
+
+    fn evaluate_store_mem(&self, memory_token: expression::MemoryToken, subexpr: expression::ExprPrime) -> Result<f64, InterpreterErr> {
+        let subexpr_value = self.evaluate_expr_prime(subexpr)?;
+
+        match self.memory.try_borrow_mut() {
+            Err(borrow_error) => Err(InterpreterErr::new(format!("Failed to access memory: {borrow_error}").as_str())),
+            Ok(mut memory) => {
+                if memory.len() <= memory_token.value {
+                    Err(InterpreterErr::new(format!("Memory entry {} does not exist.", memory_token.value).as_str()))
+                }
+                else {
+                    memory[memory_token.value] = subexpr_value;
+                    Ok(subexpr_value)
+                } 
             }
         }
     }
