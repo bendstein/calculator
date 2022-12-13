@@ -125,13 +125,13 @@ impl Default for Interpreter {
 }
 
 impl Interpreter {
-    pub fn clear_mem(&self) {
+    pub fn clear_mem(&mut self) {
         let mut memory = self.memory.borrow_mut();
         memory.clear();
         memory.resize(u8::MAX as usize, 0_f64);
     }
 
-    pub fn clear_stack(&self) {
+    pub fn clear_stack(&mut self) {
         let mut history = self.history.borrow_mut();
         history.clear();
     }

@@ -26,6 +26,16 @@ impl<'a> Parser<'a> {
         self.lah
     }
 
+    pub fn reset(&mut self) {
+        self.lah = 0
+    }
+
+    pub fn set_line(&mut self, line: &'a str) {
+        self.reset();
+        self.tokens = line.trim().graphemes(true)
+            .collect();
+    }
+
     pub fn parse_line(line: &'a str) -> Result<xpr::Expr, ParserErr> {
         let mut parser = Self::new(line);
         parser.parse()
@@ -1056,5 +1066,11 @@ impl<'a> Parser<'a> {
         };      
 
         self.lah = current_lah;
+    }
+}
+
+impl Default for Parser<'_> {
+    fn default() -> Self {
+        Self::new("")
     }
 }

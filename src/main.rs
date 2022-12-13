@@ -15,7 +15,7 @@ fn main() {
     //Set to use virtual terminal so that control characters work on windows
     _ = colored::control::set_virtual_terminal(true);
 
-    let interpreter = calculator_interpreter::Interpreter::default();
+    let mut interpreter = calculator_interpreter::Interpreter::default();
 
     println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, '{CLEAR_HISTORY_COMMAND}' to clear result history, '{CLEAR_MEMORY_COMMAND}' to clear calculator memory, or '{EXIT_COMMAND}' to exit.");
 
@@ -43,6 +43,7 @@ fn main() {
         input = String::from(input.trim_end());
 
         if input.eq_ignore_ascii_case(EXIT_COMMAND) {
+            println!("Exiting...");
             break;
         }
         else if input.eq_ignore_ascii_case(CLEAR_COMMAND) {
@@ -51,10 +52,12 @@ fn main() {
         }
         else if input.eq_ignore_ascii_case(CLEAR_HISTORY_COMMAND) {
             interpreter.clear_stack();
+            println!("Cleared calculator history.");
             continue;
         }
         else if input.eq_ignore_ascii_case(CLEAR_MEMORY_COMMAND) {
             interpreter.clear_mem();
+            println!("Cleared calculator memory.");
             continue;
         }
 
