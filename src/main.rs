@@ -15,7 +15,7 @@ fn main() {
     //Set to use virtual terminal so that control characters work on windows
     _ = colored::control::set_virtual_terminal(true);
 
-    let mut interpreter = calculator_interpreter::Interpreter::default();
+    let mut interpreter = calculator_interpreter::interpreter::Interpreter::default();
 
     println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, '{CLEAR_HISTORY_COMMAND}' to clear result history, '{CLEAR_MEMORY_COMMAND}' to clear calculator memory, or '{EXIT_COMMAND}' to exit.");
 
