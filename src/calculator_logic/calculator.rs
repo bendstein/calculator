@@ -3,6 +3,7 @@ pub mod calculator_err;
 use super::{calculator_interpreter::{interpreter::Interpreter}, calculator_parser};
 use calculator_err::CalculatorErr;
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct Calculator {
     interpreter: Interpreter
 }
