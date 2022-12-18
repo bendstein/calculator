@@ -41,7 +41,7 @@ fn main() {
     });
 
     //Attach the calculator to the UI
-    ui.take_calculator(calculator);
+    ui.attach_calculator(calculator);
 
     //Start the UI
     match ui.start() {

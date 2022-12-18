@@ -14,7 +14,7 @@ pub struct ConsoleUI {
 }
 
 impl CalculatorUI for ConsoleUI {
-    fn take_calculator(&mut self, calculator: calculator_logic::calculator::Calculator) {
+    fn attach_calculator(&mut self, calculator: calculator_logic::calculator::Calculator) {
         self.calculator = calculator;
     }
 
