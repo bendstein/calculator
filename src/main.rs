@@ -1,9 +1,10 @@
-use std::io::Write;
-
 #[macro_use]
 extern crate lazy_static;
 
 pub mod calculator_logic;
+pub mod calculator_interface;
+
+use std::io::Write;
 use calculator_logic::{calculator_interpreter, calculator_parser};
 
 const EXIT_COMMAND: &str = ":exit";
