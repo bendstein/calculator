@@ -5,11 +5,11 @@ To start in GUI mode, run the application with no arguments (or, with '/d:gui').
 To start in Console mode, run the application with '/d:console'.
 
 ### GUI mode
-
+---
 WIP
 
 ### Console mode
-
+---
 Can be executed through the terminal (by running with '/d:Console'), starting a loop allowing the user to enter an expression, and printing the evaluated result.
 
 Additionally:
