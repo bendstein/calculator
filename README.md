@@ -1,8 +1,8 @@
 A calculator made in rust.
 
-To start in GUI mode, run the application with no arguments.
+To start in GUI mode, run the application with no arguments (or, with '/d:gui').
 
-To start in Console mode, run the application with '/d:Console'.
+To start in Console mode, run the application with '/d:console'.
 
 ### GUI mode
 
