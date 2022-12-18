@@ -11,4 +11,7 @@ unicode-segmentation = "1.9.0"
 lazy_static = "1.4.0"
 rand = "0.8.4"
 colored = "2.0.0"
-slint = "0.3.2"
+slint = "0.3.3"
+
+[build-dependencies]
+slint-build = "0.3.3"
