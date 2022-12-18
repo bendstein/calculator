@@ -6,7 +6,7 @@ pub mod calculator_interface;
 mod handle_args;
 
 use calculator_logic::calculator;
-use calculator_interface::{console::ConsoleUI, ui_trait::CalculatorUI};
+use calculator_interface::{console::ConsoleUI, gui::GraphicalUI, ui_trait::CalculatorUI};
 
 fn main() {
     //Read in command line arguments
@@ -35,10 +35,10 @@ fn main() {
     let calculator = calculator::Calculator::default();
     
     //Create the UI instance
-    let mut ui: Box<dyn CalculatorUI> = Box::from(match display_type {
-        DisplayType::Console => ConsoleUI::default(),
-        DisplayType::Gui => unimplemented!()
-    });
+    let mut ui: Box<dyn CalculatorUI> = match display_type {
+        DisplayType::Console => Box::from(ConsoleUI::default()),
+        DisplayType::Gui => Box::from(GraphicalUI::default())
+    };
 
     //Attach the calculator to the UI
     ui.attach_calculator(calculator);
