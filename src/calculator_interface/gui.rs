@@ -1,7 +1,6 @@
 use crate::calculator_logic;
 use super::ui_trait::*;
 
-slint::include_modules!();
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GraphicalUI {
@@ -14,7 +13,7 @@ impl CalculatorUI for GraphicalUI {
     }
 
     fn start(&mut self) -> Result<(), &str> {
-        HelloWorld::new().run();
+
         Ok(())
     }
 }
