@@ -1,6 +1,14 @@
 use std::ops::{Range, RangeInclusive};
 
 use super::interpreter::*;
+use crate::calculator_logic::calculator_parser::{parser::Parser, expression::Expr};
+
+fn parse(input: &str) -> Expr {
+    match Parser::new(input).parse() {
+        Ok(result) => result,
+        Err(err) => panic!("{err}")
+    }
+}
 
 /**
  * The provided input, should be parsed and evaluated
@@ -9,7 +17,7 @@ use super::interpreter::*;
 fn default_test(input: &str, expected: f64) {
     const THRESHOLD: f64 = 4_f64 * f64::EPSILON;
 
-    match Interpreter::default().evaluate_string(input) {
+    match Interpreter::default().evaluate(parse(input)) {
         Ok(result) => {
             assert!((result - expected).abs() < THRESHOLD, "Testing equality of {result} and {expected}.")
         },
@@ -29,7 +37,7 @@ fn sequence_test(sequence: Vec<(&str, Option<f64>)>) {
     let interpreter = Interpreter::default();
 
     for (n, (input, expected)) in sequence.iter().enumerate() {
-        match interpreter.evaluate_string(input) {
+        match interpreter.evaluate(parse(input)) {
             Ok(result) => {
                 match expected {
                     None => (),
@@ -50,7 +58,7 @@ fn sequence_test(sequence: Vec<(&str, Option<f64>)>) {
  */
 fn inf_test(input: &str) {
 
-    match Interpreter::default().evaluate_string(input) {
+    match Interpreter::default().evaluate(parse(input)) {
         Ok(result) => {
             assert!(result.is_infinite(), "Testing that {result} = f64::inf")
         },
@@ -66,7 +74,7 @@ fn inf_test(input: &str) {
  */
 fn nan_test(input: &str) {
 
-    match Interpreter::default().evaluate_string(input) {
+    match Interpreter::default().evaluate(parse(input)) {
         Ok(result) => {
             assert!(result.is_nan(), "Testing that {result} is not a number")
         },
@@ -80,7 +88,7 @@ fn in_range_test(input: &str, range: Range<f64>, repeat: usize) {
     let interpreter = Interpreter::default();
 
     for _ in 0_usize..repeat {
-        match interpreter.evaluate_string(input) {
+        match interpreter.evaluate(parse(input)) {
             Ok(result) => {
                 assert!(range.contains(&result), "Testing that {result} is in the range [{}, {}).", range.start, range.end)
             },
@@ -95,7 +103,7 @@ fn in_range_inc_test(input: &str, range: RangeInclusive<f64>, repeat: usize) {
     let interpreter = Interpreter::default();
 
     for _ in 0_usize..repeat {
-        match interpreter.evaluate_string(input) {
+        match interpreter.evaluate(parse(input)) {
             Ok(result) => {
                 assert!(range.contains(&result), "Testing that {result} is in the range [{}, {}].", range.start(), range.end())
             },
@@ -113,7 +121,7 @@ fn is_integer_test(input: &str, repeat: usize) {
     let interpreter = Interpreter::default();
 
     for _ in 0_usize..repeat {
-        match interpreter.evaluate_string(input) {
+        match interpreter.evaluate(parse(input)) {
             Ok(result) => {
                 assert!(result.fract().abs() < f64::EPSILON, "Testing that {input} is an integer.")
             },
@@ -128,7 +136,7 @@ fn is_integer_test(input: &str, repeat: usize) {
  * The provided input should panic
  */
 fn panic_test(input: &str) {
-    match Interpreter::default().evaluate_string(input) {
+    match Interpreter::default().evaluate(parse(input)) {
         Ok(result) => println!("{result}"),
         Err(err) => {
             panic!("{err}")

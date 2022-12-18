@@ -3,7 +3,7 @@ pub mod function;
 
 use interpreter_err::InterpreterErr;
 use function::{*, function_impl::*, function_lazy_static::*};
-use super::super::calculator_parser::{parser, expression};
+use super::super::calculator_parser::expression;
 use std::{collections::HashMap, cell::RefCell};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -95,25 +95,40 @@ impl Default for Interpreter {
 }
 
 impl Interpreter {
+    /**
+     * Reset calculator memory to its original state
+     */
     pub fn clear_mem(&mut self) {
         let mut memory = self.memory.borrow_mut();
         memory.clear();
         memory.resize(u8::MAX as usize, 0_f64);
     }
 
+    /**
+     * Result calculator history to empty
+     */
     pub fn clear_stack(&mut self) {
         let mut history = self.history.borrow_mut();
         history.clear();
     }
 
+    /**
+     * Create a clone of the calculator's current memory
+     */
     pub fn view_mem(&self) -> Vec<f64> {
         self.memory.borrow().clone()
     }
 
+    /**
+     * Create a clone of the calculator's current history
+     */
     pub fn view_stack(&self) -> Vec<f64> {
         self.history.borrow().clone()
     }
 
+    /**
+     * Evaluate the given expression with the given options
+     */
     pub fn evaluate_with_options(&self, expression: expression::Expr, options: EvaluateOptions) -> Result<(f64, Option<Vec<f64>>), InterpreterErr> {
         let (evaluated_result, evaluated_memory) = match expression {
             expression::Expr::None => {
@@ -166,20 +181,14 @@ impl Interpreter {
         }
     }
 
+    /**
+     * Evaluate the given expression
+     */
     pub fn evaluate(&self, expression: expression::Expr) -> Result<f64, InterpreterErr> {
         match self.evaluate_with_options(expression, EvaluateOptions::default()) {
             Err(e) => Err(e),
             Ok((result, _)) => Ok(result)
         }
-    }
-
-    pub fn evaluate_string(&self, line: &str) -> Result<f64, InterpreterErr> {
-        let expr = match parser::Parser::parse_line(line) {
-            Ok(parse_tree) => Ok(parse_tree),
-            Err(parse_err) => Err(InterpreterErr::new(parse_err.message()))
-        }?;
-
-        self.evaluate(expr)
     }
 
     fn evaluate_expr_prime(&self, expression: expression::ExprPrime) -> Result<f64, InterpreterErr> {
