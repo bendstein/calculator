@@ -1,6 +1,16 @@
-A calculator parser/interpreter made in rust.
+A calculator made in rust.
 
-Can be executed through the terminal, starting a loop allowing the user to enter an expression, and printing the evaluated result.
+To start in GUI mode, run the application with no arguments.
+
+To start in Console mode, run the application with '/d:Console'.
+
+### GUI mode
+
+WIP
+
+### Console mode
+
+Can be executed through the terminal (by running with '/d:Console'), starting a loop allowing the user to enter an expression, and printing the evaluated result.
 
 Additionally:
  - Entering ':exit', the loop will break and the program will exit.
