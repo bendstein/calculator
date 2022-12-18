@@ -12,6 +12,16 @@ impl CalculatorUI for GraphicalUI {
     }
 
     fn start(&mut self) -> Result<(), &str> {
+        HelloWorld::new().run();
         Ok(())
+    }
+}
+
+slint::slint!{
+    HelloWorld := Window {
+        Text {
+            text: "hello world";
+            color: green;
+        }
     }
 }

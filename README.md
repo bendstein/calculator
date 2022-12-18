@@ -141,4 +141,4 @@ This calculator has several built-in functions.
 ----
   - ~~Report error reasons during parsing.~~ (Done)
   - Implement GUI?
-    - Possibly using Druid (see: https://docs.rs/druid/latest/druid/)
+    - Using slint (https://crates.io/crates/slint)
