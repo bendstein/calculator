@@ -151,4 +151,4 @@ This calculator has several built-in functions.
 ----
   - ~~Report error reasons during parsing.~~ (Done)
   - Implement GUI?
-    - Using slint (https://crates.io/crates/slint)
+    - Using kas (https://docs.rs/kas/0.12.0/kas/)
