@@ -14,13 +14,11 @@ pub struct ConsoleUI {
 }
 
 impl CalculatorUI for ConsoleUI {
-    type Error = &'static str;
-
     fn take_calculator(&mut self, calculator: calculator_logic::calculator::Calculator) {
         self.calculator = calculator;
     }
 
-    fn start(&mut self) -> Result<(), Self::Error> {
+    fn start(&mut self) -> Result<(), &str> {
         //Set to use virtual terminal so that control characters work on windows
         _ = colored::control::set_virtual_terminal(true);
 
