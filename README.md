@@ -1,8 +1,8 @@
 A calculator made in rust.
 
-To start in GUI mode, run the application with no arguments (or, with '/d:gui').
+To start in GUI mode, run the executable 'gui.exe'.
 
-To start in Console mode, run the application with '/d:console'.
+To start in Console mode, run the executable 'console.exe'.
 
 ### GUI mode
 ---
@@ -10,7 +10,7 @@ WIP
 
 ### Console mode
 ---
-Can be executed through the terminal (by running with '/d:Console'), starting a loop allowing the user to enter an expression, and printing the evaluated result.
+Can be executed through the terminal starting a loop allowing the user to enter an expression, and printing the evaluated result.
 
 Additionally:
  - Entering ':exit', the loop will break and the program will exit.
