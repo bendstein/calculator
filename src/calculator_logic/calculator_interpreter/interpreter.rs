@@ -6,6 +6,25 @@ use function::{*, function_impl::*, function_lazy_static::*};
 use super::super::calculator_parser::{parser, expression};
 use std::{collections::HashMap, cell::RefCell};
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct EvaluateOptions {
+    pub preview: bool
+}
+
+impl EvaluateOptions {
+    pub fn new(preview: bool) -> Self {
+        Self {
+            preview
+        }
+    }
+}
+
+impl Default for EvaluateOptions {
+    fn default() -> Self {
+        Self::new(false)
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Interpreter {
     functions: HashMap<String, Function>,
@@ -87,23 +106,70 @@ impl Interpreter {
         history.clear();
     }
 
-    pub fn evaluate(&self, expression: expression::Expr) -> Result<f64, InterpreterErr> {
-        let evaluated_result = match expression {
-            expression::Expr::None => Ok(0_f64),
-            expression::Expr::ExprPrime(expr_prime) => self.evaluate_expr_prime(*expr_prime)
+    pub fn view_mem(&self) -> Vec<f64> {
+        self.memory.borrow().clone()
+    }
+
+    pub fn view_stack(&self) -> Vec<f64> {
+        self.history.borrow().clone()
+    }
+
+    pub fn evaluate_with_options(&self, expression: expression::Expr, options: EvaluateOptions) -> Result<(f64, Option<Vec<f64>>), InterpreterErr> {
+        let (evaluated_result, evaluated_memory) = match expression {
+            expression::Expr::None => {
+                let result = Ok(0_f64);
+                if options.preview {
+                    let temp_mem = self.memory.borrow().clone();
+                    (result, Some(temp_mem))
+                }
+                else {
+                    (result, None)
+                }
+            },
+            expression::Expr::ExprPrime(expr_prime) => {
+
+                if options.preview {
+                    let temp_mem = self.memory.borrow().clone();
+
+                    let result: Result<f64, InterpreterErr> = self.evaluate_expr_prime(*expr_prime);
+
+                    let result_mem = self.memory.borrow().clone();
+
+                    //Reset memory back to its original state (as stored in temp_mem)
+                    let mut mem = self.memory.borrow_mut();
+
+                    for (i, elem) in temp_mem.iter().enumerate() {
+                        mem[i] = *elem;
+                    }
+
+                    (result, Some(result_mem))
+                }
+                else {
+                    (self.evaluate_expr_prime(*expr_prime), None)
+                }
+            }
         };
 
         if let Ok(evaluated) = evaluated_result {
-            let mut history = self.history.borrow_mut();
+            if !options.preview {
+                let mut history = self.history.borrow_mut();
 
-            if history.is_empty() || *history.last().unwrap() != evaluated {
-                history.push(evaluated);
+                if history.is_empty() || *history.last().unwrap() != evaluated {
+                    history.push(evaluated);
+                }
             }
 
-            Ok(evaluated)
+            Ok((evaluated, evaluated_memory))
         }
         else {
-            evaluated_result
+            Err(evaluated_result.unwrap_err())
+        }
+    }
+
+    pub fn evaluate(&self, expression: expression::Expr) -> Result<f64, InterpreterErr> {
+        match self.evaluate_with_options(expression, EvaluateOptions::default()) {
+            Err(e) => Err(e),
+            Ok((result, _)) => Ok(result)
         }
     }
 
