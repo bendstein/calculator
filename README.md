@@ -137,7 +137,7 @@ This calculator has several built-in functions.
  - RRANDI(a, b)
    - Returns a random integer number in the range [*a*, *b*].
  - SIGN(a)
-   - Returns *1* if a is non-negative, and returns *-1* otherwise.
+   - Returns *1* if *a* is non-negative, and returns *-1* otherwise.
  - COND(a, b, c, d)
    - If *a == b*, returns *c*, and returns *d* otherwise.
  - E
