@@ -51,8 +51,8 @@ impl Calculator {
         }
     }
 
-    pub fn get_current_state(&self) -> CalculatorState {
-        CalculatorState::new(self.interpreter.view_mem(), self.interpreter.view_stack())
+    pub fn clone_current_state(&self) -> CalculatorState {
+        CalculatorState::new(self.interpreter.clone_mem(), self.interpreter.clone_stack())
     }
 
     pub fn evaluate_with_options(&self, expression: &str, options: EvaluateOptions) -> Result<(f64, CalculatorState), CalculatorErr> {
@@ -70,7 +70,7 @@ impl Calculator {
             Err(e) => Err(CalculatorErr::err(format!("An error occurred while evaluating expression '{prepared_expression}': {e}").as_str()))?
         };
 
-        Ok((evaluated, CalculatorState::new(mem.unwrap_or_else(|| self.interpreter.view_mem()), self.interpreter.view_stack())))
+        Ok((evaluated, CalculatorState::new(mem.unwrap_or_else(|| self.interpreter.clone_mem()), self.interpreter.clone_stack())))
     }
 
     pub fn evaluate(&self, expression: &str) -> Result<f64, CalculatorErr> {

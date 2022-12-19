@@ -115,15 +115,23 @@ impl Interpreter {
     /**
      * Create a clone of the calculator's current memory
      */
-    pub fn view_mem(&self) -> Vec<f64> {
+    pub fn clone_mem(&self) -> Vec<f64> {
         self.memory.borrow().clone()
     }
 
     /**
      * Create a clone of the calculator's current history
      */
-    pub fn view_stack(&self) -> Vec<f64> {
+    pub fn clone_stack(&self) -> Vec<f64> {
         self.history.borrow().clone()
+    }
+
+    pub fn borrow_mem(&self) -> std::cell::Ref<Vec<f64>> {
+        self.memory.borrow()
+    }
+
+    pub fn borrow_stack(&self) -> std::cell::Ref<Vec<f64>> {
+        self.history.borrow()
     }
 
     /**
