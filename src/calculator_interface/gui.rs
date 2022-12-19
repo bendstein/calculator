@@ -8,7 +8,8 @@ use calculator_logic::calculator::*;
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GraphicalUI {
     calculator: calculator_logic::calculator::Calculator,
-    buffer: String
+    buffer: String,
+    cursor: usize
 }
 
 #[allow(dead_code)]
@@ -68,6 +69,44 @@ impl GraphicalUI {
 
     fn evaluate_buffer_preview(&self) -> Result<(f64, CalculatorState), calculator_err::CalculatorErr> {
         self.calculator.evaluate_with_options(&self.buffer, EvaluateOptions::new(InterpreterOptions::new(true)))
+    }
+
+    fn increment_cursor(&mut self) {
+        if self.cursor <= self.buffer.len() {
+            self.cursor += 1;
+        }
+    }
+
+    fn insert_at_cursor(&mut self, content: &str) {
+        if self.cursor == self.buffer.len() {
+            if !content.is_empty() {
+                self.buffer_append(content);
+            }
+        }
+        else if content.is_empty() {
+            self.buffer.remove(self.cursor);
+            if self.cursor > self.buffer.len() {
+                self.cursor = self.buffer.len();
+            }
+        }
+        else {
+            let before: &str = if self.cursor == 0_usize {
+                ""
+            }
+            else {
+                &self.buffer[0..self.cursor]
+            };
+
+            let after: &str = if self.cursor + content.len() >= self.buffer.len() {
+                ""
+            }
+            else {
+                &self.buffer[self.cursor + content.len() + 1..self.buffer.len()]
+            };
+
+            self.buffer = format!("{before}{content}{after}");
+            self.cursor = self.cursor + content.len() + 1;
+        }
     }
 }
 
