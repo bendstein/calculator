@@ -5,7 +5,7 @@ use super::window::CalculatorAction as CAction;
 impl_scope! {
     #[widget{
         layout = grid: {
-            0, 0: TextButton::new_msg("&clear", CAction::Clear);
+            0, 0: TextButton::new_msg("&Clear", CAction::Clear).with_keys(&[VirtualKeyCode::C]);
             0, 1: TextButton::new_msg("Back", CAction::Backspace(true)).with_keys(&[VirtualKeyCode::Back]);
             //0, 2: TextButton::new_msg("Del", CAction::Delete(true)).with_keys(&[VirtualKeyCode::Delete]);
             0, 3: TextButton::new_msg("Sbmt", CAction::Submit).with_keys(&[VirtualKeyCode::Return, VirtualKeyCode::NumpadEnter, VirtualKeyCode::Equals]);

@@ -19,7 +19,7 @@ pub fn factorial(n: f64) -> Result<f64, InterpreterErr> {
                 agg = product;
             }
             else {
-                Err(InterpreterErr::new("Integer Overflow"))?
+                return Ok(f64::INFINITY);
             }
         }
         Ok(agg as f64)

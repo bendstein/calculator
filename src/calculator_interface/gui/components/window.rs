@@ -69,9 +69,9 @@ impl_scope! {
                             },
                         }
                     },
-                    Err(_e) => {
-                        let mut _x = 1;
-                        _x += 1;
+                    Err(e) => {
+                        self.buffer_clear();
+                        *mgr |= self.display.set_string(format!("{e}"));
                     }
                }
             }
