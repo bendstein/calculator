@@ -1,10 +1,14 @@
 use kas::prelude::*;
+
+#[allow(unused_imports)]
 use kas::{impl_default, Widget};
+
 use kas::{impl_scope, widgets::EditBox};
 use std::ops::RangeBounds;
+use crate::calculator_logic::calculator_interpreter::interpreter::function::FunctionArgs;
+use crate::calculator_logic::calculator_parser::expression::HistoryToken;
 use crate::calculator_logic::{self, calculator_parser};
 use crate::calculator_logic::calculator::calculator_err::CalculatorErr;
-use crate::calculator_logic::calculator_parser::parser;
 use super::buttons::Buttons;
 use calculator_logic::calculator::*;
 
@@ -198,7 +202,7 @@ impl Window {
         if self.cursor == self.buffer.len() {
             if !content.is_empty() {
                 self.buffer_append(content);
-                self.cursor = self.cursor + content.len();
+                self.cursor += content.len();
             }
         }
         else if content.is_empty() {
@@ -238,16 +242,39 @@ impl Window {
                  *  - a binary function id
                  * Then prefix the content with $0
                  */
-                if let Some(calculator) = &self.calculator {
+                let prepend_history = if let Some(calculator) = &self.calculator {
                     if self.buffer.is_empty() && calculator.has_history() {
                         let parser = calculator.parser();
+                        
+                        if parser.parse_expression::<calculator_parser::expression::BinopInfix>(content.as_str()).is_ok()
+                            || parser.parse_expression::<calculator_parser::expression::UnopSuffix>(content.as_str()).is_ok() {
+                            true
+                        }
+                        else if let Ok(id) = parser.parse_expression::<calculator_parser::expression::IdToken>(content.as_str()) {
+                            let interpreter = calculator.interpreter();
+                            let func = interpreter.get_func_by_name(id.value.as_str());
 
-                        // let prepend_history = calculator_parser::expression::BinopInfix::try_from(content).is_ok()
-                        //     || calculator_parser::expression::UnopSuffix::try_from(content).is_ok();
+                            func.map_or_else(|| false, |f| matches!(f.args, FunctionArgs::Two(_)))
+                        }
+                        else {
+                            false
+                        }
+                    }
+                    else {
+                        false
                     }
                 }
+                else {
+                    false
+                };
                 
-                self.insert_at_cursor(content.as_str());
+                if prepend_history {
+                    let new_content = format!("$0 {content} ");
+                    self.insert_at_cursor(new_content.as_str());
+                }
+                else {
+                    self.insert_at_cursor(content.as_str());
+                }
 
                 if preview {
                     self.evaluate_buffer_preview()

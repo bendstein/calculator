@@ -138,6 +138,14 @@ impl Interpreter {
         self.history.borrow()
     }
 
+    pub fn get_func_by_name(&self, function: &str) -> Option<Function> {
+        let matching: Vec<(&String, &Function)> = self.functions.iter()
+            .filter(|(name, _)| name.eq_ignore_ascii_case(function))
+            .collect();
+
+        matching.first().map(|func| func.1.clone())
+    }
+
     /**
      * Evaluate the given expression with the given options
      */
