@@ -250,7 +250,8 @@ impl Window {
                      * If buffer is empty, and history is not, and content is an infix or suffix operator,
                      * prepend with $0.
                      */
-                    if self.buffer.is_empty() && calculator.has_history() {
+                    if self.buffer.is_empty() && calculator.has_history()
+                        && parser.parse_expression::<calculator_parser::expression::UnopPrefix>(new_content.as_str()).is_err() {
                         if parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() {
                             new_content = format!("$0 {new_content} ");
                         }
