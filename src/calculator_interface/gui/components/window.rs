@@ -159,7 +159,12 @@ impl Window {
         self.buffer = format!("{start}{end}");
     }
 
-    fn buffer_remove_end(&mut self, count: usize) {
+    fn buffer_remove_end(&mut self, count: usize, trim_end: bool) {
+        if trim_end {
+            let trimmed = self.buffer.trim_end();
+            self.buffer = String::from(trimmed);
+        }
+
         if count == 0 {}
         else if count == 1 {
             self.buffer.pop();
@@ -260,11 +265,28 @@ impl Window {
                             }
                         }
                     }
+                    /*
+                     * If buffer isn't empty, and appending to end of buffer, and content is an infix operator,
+                     * surround operator with spaces
+                     */
                     else if !self.buffer.is_empty() && self.cursor == self.buffer.len() 
                         && (parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() 
                             || parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()).is_ok()) {
                         new_content = format!("{}{new_content} ", if self.buffer.ends_with(' ') { "" } else { " " });
                     }
+                    /*
+                     * If buffer isn't empty, and appending to end of buffer, and content is a suffix operator,
+                     * put a space after it, and remove any spaces before it
+                     */
+                    else if !self.buffer.is_empty() && self.cursor == self.buffer.len() 
+                        && parser.parse_expression::<calculator_parser::expression::UnopSuffix>(new_content.as_str()).is_ok() {
+                            if self.buffer.ends_with(' ') {
+                                let trimmed = self.buffer.trim_end();
+                                self.buffer = String::from(trimmed);
+                                self.cursor = self.cursor.min(self.buffer.len());
+                            }
+                            new_content = format!("{new_content} ");
+                        }
     
                     self.insert_at_cursor(new_content.as_str());
 
@@ -291,7 +313,8 @@ impl Window {
             // },
             CalculatorAction::Backspace(preview) => {
                 if self.cursor > 0 {
-                    self.buffer_remove_range(self.cursor - 1..=self.cursor - 1);
+                    self.buffer_remove_end(1_usize, true);
+                    self.cursor = self.cursor.min(self.buffer.len());
 
                     if preview {
                         self.evaluate_buffer_preview()
