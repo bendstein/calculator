@@ -4,9 +4,9 @@ use super::interpreter::*;
 use crate::calculator_logic::calculator_parser::{parser::Parser, expression::Expr};
 
 fn parse(input: &str) -> Expr {
-    match Parser::new(input).parse() {
+    match Parser::default().parse(input) {
         Ok(result) => result,
-        Err(err) => panic!("{err}")
+        Err(err) => panic!("{err} (at {0})", err.lah())
     }
 }
 

@@ -8,17 +8,15 @@ const CLEAR_COMMAND: &str = ":clear";
 const CLEAR_HISTORY_COMMAND: &str = ":clear-hist";
 const CLEAR_MEMORY_COMMAND: &str = ":clear-mem";
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct ConsoleUI {
     calculator: calculator_logic::calculator::Calculator
 }
 
 impl CalculatorUI for ConsoleUI {
-    fn attach_calculator(&mut self, calculator: calculator_logic::calculator::Calculator) {
+    fn start(&mut self, calculator: calculator_logic::calculator::Calculator) -> Result<(), String> {
         self.calculator = calculator;
-    }
 
-    fn start(&mut self) -> Result<(), &str> {
         //Set to use virtual terminal so that control characters work on windows
         _ = colored::control::set_virtual_terminal(true);
 

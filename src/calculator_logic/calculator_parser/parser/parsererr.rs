@@ -3,6 +3,7 @@ use std::fmt::Display;
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParserErr {
     message: String,
+    lah: usize,
     propagate: bool
 }
 
@@ -10,19 +11,25 @@ impl ParserErr {
     pub fn new(message: &str) -> Self {
         Self {
             message: String::from(message),
+            lah: 0,
             propagate: false
         }
     }
 
-    pub fn err(message: &str) -> Self {
+    pub fn err(message: &str, lah: usize) -> Self {
         Self {
             message: String::from(message),
+            lah,
             propagate: true
         }
     }
 
     pub fn message(&self) -> &str {
         self.message.as_str()
+    }
+
+    pub fn lah(&self) -> usize {
+        self.lah
     }
 
     pub fn propagate(&self) -> bool {

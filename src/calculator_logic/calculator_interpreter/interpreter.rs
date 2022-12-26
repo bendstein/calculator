@@ -112,6 +112,10 @@ impl Interpreter {
         history.clear();
     }
 
+    pub fn has_history(&self) -> bool {
+        !self.history.borrow().is_empty()
+    }
+
     /**
      * Create a clone of the calculator's current memory
      */

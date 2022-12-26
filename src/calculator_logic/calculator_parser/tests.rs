@@ -6,14 +6,13 @@ use super::{terminal, expression, parser};
  * whose to_string method equals the expected string.
  */
 fn default_test(input: &str, expected: &str) {
-    match parser::Parser::parse_line(input) {
+    match parser::Parser::default().parse(input) {
         Ok(result) => {
             let result_string = result.to_string();
             assert_eq!(expected, result_string.as_str());
         },
-        Err(err) => {
-            panic!("{err}")
-        }
+        Err(err) => panic!("{err} (at {0})", err.lah())
+
     };
 }
 

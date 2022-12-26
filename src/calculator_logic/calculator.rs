@@ -1,6 +1,8 @@
 pub mod calculator_err;
 
-use super::{calculator_interpreter::{interpreter::Interpreter}, calculator_parser};
+use std::fmt::Debug;
+
+use super::{calculator_interpreter::{interpreter::Interpreter}, calculator_parser::parser::Parser};
 pub use super::calculator_interpreter::interpreter::EvaluateOptions as InterpreterOptions;
 use calculator_err::CalculatorErr;
 
@@ -39,15 +41,24 @@ impl CalculatorState {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Calculator {
-    interpreter: Interpreter
+#[derive(Clone)]
+pub struct Calculator 
+{
+    interpreter: Interpreter,
+    parser: Parser
+}
+
+impl Debug for Calculator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.interpreter.fmt(f)
+    }
 }
 
 impl Calculator {
-    pub fn new(interpreter: Interpreter) -> Self {
+    pub fn new(interpreter: Interpreter, parser: Parser) -> Self {
         Self {
-            interpreter
+            interpreter,
+            parser
         }
     }
 
@@ -58,11 +69,9 @@ impl Calculator {
     pub fn evaluate_with_options(&self, expression: &str, options: EvaluateOptions) -> Result<(f64, CalculatorState), CalculatorErr> {
         let prepared_expression = Calculator::prepare_string(expression);
 
-        let mut parser = calculator_parser::parser::Parser::new(prepared_expression);
-
-        let parsed = match parser.parse() {
+        let parsed = match self.parser.parse(prepared_expression) {
             Ok(value) => value,
-            Err(e) => Err(CalculatorErr::err(format!("An error occurred while parsing expression '{prepared_expression}'. At {}: {e}", parser.lah()).as_str()))?
+            Err(e) => Err(CalculatorErr::err(format!("An error occurred while parsing expression '{prepared_expression}'. At {}: {e}", e.lah()).as_str()))?
         };
 
         let (evaluated, mem) = match self.interpreter.evaluate_with_options(parsed, options.interpreter()) {
@@ -88,6 +97,18 @@ impl Calculator {
         self.interpreter.clear_mem()
     }
 
+    pub fn has_history(&self) -> bool {
+        self.interpreter.has_history()
+    }
+
+    pub fn parser(&self) -> &Parser {
+        &self.parser
+    }
+
+    pub fn interpreter(&self) -> &Interpreter {
+        &self.interpreter
+    }
+
     fn prepare_string(expression: &str) -> &str {
         expression.trim()
     }
@@ -95,6 +116,6 @@ impl Calculator {
 
 impl Default for Calculator {
     fn default() -> Self {
-        Self::new(Interpreter::default())
+        Self::new(Interpreter::default(), Parser::default())
     }
 }

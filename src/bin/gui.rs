@@ -9,12 +9,9 @@ fn main() {
     
     //Create the UI instance
     let mut ui = UI::default();
-
-    //Attach the calculator to the UI
-    ui.attach_calculator(calculator);
-
+    
     //Start the UI
-    match ui.start() {
+    match ui.start(calculator) {
         Ok(_) => (),
         Err(e) => {
             eprintln!("A fatal error occurred: {e}");

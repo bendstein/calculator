@@ -1,122 +1,31 @@
-use std::ops::RangeBounds;
 
 use crate::calculator_logic;
 use super::ui_trait::*;
 
 use calculator_logic::calculator::*;
 
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct GraphicalUI {
-    calculator: calculator_logic::calculator::Calculator,
-    buffer: String,
-    cursor: usize
-}
+mod components;
 
-#[allow(dead_code)]
+#[derive(Debug, Default)]
+pub struct GraphicalUI { }
+
 impl GraphicalUI {
-    fn buffer_append(&mut self, content: &str) {
-        self.buffer.push_str(content);
-    }
+    fn start_kas(&self, calculator: Calculator) -> kas::shell::Result<()> {
+        env_logger::init();
 
-    fn buffer_clear(&mut self) {
-        self.buffer.clear();
-    }
+        let mut window = components::window::Window::default();
+        window.attach_calculator(calculator);
 
-    fn buffer_remove_range<R: RangeBounds<usize>>(&mut self, range: R) {
-        //Extract range start and end
-        let mut start_bound = match range.start_bound() {
-            std::ops::Bound::Unbounded => None,
-            std::ops::Bound::Excluded(n) => Some(*n + 1),
-            std::ops::Bound::Included(n) => Some(*n)
-        };
+        let theme = kas::theme::SimpleTheme::new().with_font_size(16.0);
 
-        let mut end_bound = match range.start_bound() {
-            std::ops::Bound::Unbounded => None,
-            std::ops::Bound::Excluded(n) => Some(*n - 1),
-            std::ops::Bound::Included(n) => Some(*n)
-        };
-
-        //Reverse range direction if necessary
-        if start_bound.is_some() && end_bound.is_some() && start_bound.unwrap() > end_bound.unwrap() {
-            std::mem::swap(&mut start_bound, &mut end_bound)
-        }
-
-        //Get the inverse of the range
-        let start_range = start_bound.map(|n| 0_usize..=n);
-        let end_range = end_bound.map(|n| n..self.buffer.len());
-
-        //Get the substrings corresponding to the start and end range
-        let start = start_range.map_or("",|r| &self.buffer[r]);
-        let end = end_range.map_or("", |r| &self.buffer[r]);
-
-        //Concatenate substrings
-        self.buffer = format!("{start}{end}");
-    }
-
-    fn buffer_undo(&mut self, count: usize) {
-        if count == 0 {}
-        else if count == 1 {
-            self.buffer.pop();
-        }
-        else {
-            self.buffer_remove_range(self.buffer.len() - count..)
-        }
-    }
-
-    fn evaluate_buffer(&self) -> Result<f64, calculator_err::CalculatorErr> {
-        self.calculator.evaluate(&self.buffer)
-    }
-
-    fn evaluate_buffer_preview(&self) -> Result<(f64, CalculatorState), calculator_err::CalculatorErr> {
-        self.calculator.evaluate_with_options(&self.buffer, EvaluateOptions::new(InterpreterOptions::new(true)))
-    }
-
-    fn increment_cursor(&mut self) {
-        if self.cursor <= self.buffer.len() {
-            self.cursor += 1;
-        }
-    }
-
-    fn insert_at_cursor(&mut self, content: &str) {
-        if self.cursor == self.buffer.len() {
-            if !content.is_empty() {
-                self.buffer_append(content);
-            }
-        }
-        else if content.is_empty() {
-            self.buffer.remove(self.cursor);
-            if self.cursor > self.buffer.len() {
-                self.cursor = self.buffer.len();
-            }
-        }
-        else {
-            let before: &str = if self.cursor == 0_usize {
-                ""
-            }
-            else {
-                &self.buffer[0..self.cursor]
-            };
-
-            let after: &str = if self.cursor + content.len() >= self.buffer.len() {
-                ""
-            }
-            else {
-                &self.buffer[self.cursor + content.len() + 1..self.buffer.len()]
-            };
-
-            self.buffer = format!("{before}{content}{after}");
-            self.cursor = self.cursor + content.len() + 1;
-        }
+        kas::shell::Toolkit::new(theme)?
+            .with(window)?
+            .run()
     }
 }
 
 impl CalculatorUI for GraphicalUI {
-    fn attach_calculator(&mut self, calculator: Calculator) {
-        self.calculator = calculator;
-    }
-
-    fn start(&mut self) -> Result<(), &str> {
-
-        Ok(())
+    fn start(&mut self, calculator: Calculator) -> Result<(), String> {
+        self.start_kas(calculator).map_err(|e| e.to_string())
     }
 }
