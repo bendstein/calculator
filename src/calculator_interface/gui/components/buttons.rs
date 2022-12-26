@@ -1,18 +1,18 @@
 use kas::{impl_scope, widgets::TextButton, event::VirtualKeyCode};
 use super::window::CalculatorAction as CAction;
-use super::window::CursorDirection as CDir;
+//use super::window::CursorDirection as CDir;
 
 impl_scope! {
     #[widget{
         layout = grid: {
-            0, 0: TextButton::new_msg("&clear", CAction::Clear(true));
+            0, 0: TextButton::new_msg("&clear", CAction::Clear);
             0, 1: TextButton::new_msg("Back", CAction::Backspace(true)).with_keys(&[VirtualKeyCode::Back]);
-            0, 2: TextButton::new_msg("Del", CAction::Delete(true)).with_keys(&[VirtualKeyCode::Delete]);
+            //0, 2: TextButton::new_msg("Del", CAction::Delete(true)).with_keys(&[VirtualKeyCode::Delete]);
             0, 3: TextButton::new_msg("Sbmt", CAction::Submit).with_keys(&[VirtualKeyCode::Return, VirtualKeyCode::NumpadEnter, VirtualKeyCode::Equals]);
-            1, 0: TextButton::new_msg("<", CAction::Cursor(CDir::Left)).with_keys(&[VirtualKeyCode::Left]);
-            1, 1: TextButton::new_msg("^", CAction::Cursor(CDir::Up)).with_keys(&[VirtualKeyCode::Up]);
-            1, 2: TextButton::new_msg(">", CAction::Cursor(CDir::Right)).with_keys(&[VirtualKeyCode::Right]);
-            1, 3: TextButton::new_msg("v", CAction::Cursor(CDir::Down)).with_keys(&[VirtualKeyCode::Down]);
+            // 1, 0: TextButton::new_msg("<", CAction::Cursor(CDir::Left)).with_keys(&[VirtualKeyCode::Left]);
+            // 1, 1: TextButton::new_msg("^", CAction::Cursor(CDir::Up)).with_keys(&[VirtualKeyCode::Up]);
+            // 1, 2: TextButton::new_msg(">", CAction::Cursor(CDir::Right)).with_keys(&[VirtualKeyCode::Right]);
+            // 1, 3: TextButton::new_msg("v", CAction::Cursor(CDir::Down)).with_keys(&[VirtualKeyCode::Down]);
             2, 1: TextButton::new_msg("&+", CAction::Insert("+".to_string(), true));
             2, 2: TextButton::new_msg("&-", CAction::Insert("-".to_string(), true));
             2, 3: TextButton::new_msg("&*", CAction::Insert("*".to_string(), true));

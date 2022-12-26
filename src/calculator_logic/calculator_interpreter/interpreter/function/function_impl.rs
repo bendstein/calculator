@@ -12,7 +12,17 @@ pub fn factorial(n: f64) -> Result<f64, InterpreterErr> {
         Err(InterpreterErr::new("Cannot apply factorial operator to floating point value."))
     }
     else {
-        Ok(n * factorial(n - 1_f64)?)
+        let rounded = n.round() as i32;
+        let mut agg = 1;
+        for i in 0..rounded {
+            if let Some(product) = i32::checked_mul(agg, rounded - i) {
+                agg = product;
+            }
+            else {
+                Err(InterpreterErr::new("Integer Overflow"))?
+            }
+        }
+        Ok(agg as f64)
     }
 }
 

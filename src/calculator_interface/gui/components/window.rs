@@ -5,8 +5,6 @@ use kas::{impl_default, Widget};
 
 use kas::{impl_scope, widgets::EditBox};
 use std::ops::RangeBounds;
-use crate::calculator_logic::calculator_interpreter::interpreter::function::FunctionArgs;
-use crate::calculator_logic::calculator_parser::expression::HistoryToken;
 use crate::calculator_logic::{self, calculator_parser};
 use crate::calculator_logic::calculator::calculator_err::CalculatorErr;
 use super::buttons::Buttons;
@@ -24,7 +22,7 @@ impl_scope! {
     #[derive(Debug, Clone)]
     pub (in crate::calculator_interface::gui) struct Window {
         core: widget_core!(),
-        #[widget] display: EditBox = EditBox::new("0")
+        #[widget] display: EditBox = EditBox::new("")
             .with_editable(false)
             .with_multi_line(true)
             .with_lines(2, 4)
@@ -42,27 +40,28 @@ impl_scope! {
                         let buffer_contents = self.buffer.clone();
 
                         match result {
-                            CalculatorResult::None => {
-                                //*mgr |= self.display.set_string(buffer_contents);
+                            CalculatorResult::None => (),
+                            CalculatorResult::RefreshDisplay => {
+                                *mgr |= self.display.set_string(String::from(""));
                             },
                             CalculatorResult::Number(n) => {
                                 self.buffer_clear();
                                 *mgr |= self.display.set_string(format!("{n}"));
                             },
-                            CalculatorResult::State(calculator_state) => {
+                            CalculatorResult::State(_calculator_state) => {
                                 *mgr |= self.display.set_string(format!("\r\n\r\n{buffer_contents}"));
                             },
-                            CalculatorResult::NumberAndState(n, calculator_state) => {
+                            CalculatorResult::NumberAndState(n, _calculator_state) => {
                                 self.buffer_clear();
                                 *mgr |= self.display.set_string(format!("{n}"));
                             },
                             CalculatorResult::PreviewNumberAndState(preview_result) => {
                                 let preview_message = match preview_result {
-                                    Ok((n, calculator_state)) => {
+                                    Ok((n, _calculator_state)) => {
                                         format!("{n}")
                                     },
-                                    Err(e) => {
-                                        format!("")
+                                    Err(_e) => {
+                                        String::from("")
                                     }
                                 };
 
@@ -70,9 +69,9 @@ impl_scope! {
                             },
                         }
                     },
-                    Err(e) => {
-                        let mut x = 1;
-                        x += 1;
+                    Err(_e) => {
+                        let mut _x = 1;
+                        _x += 1;
                     }
                }
             }
@@ -84,22 +83,22 @@ impl_scope! {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
-pub enum CursorDirection {
-    #[default] Up,
-    Left,
-    Down,
-    Right
-}
+// #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+// pub enum CursorDirection {
+//     #[default] Up,
+//     Left,
+//     Down,
+//     Right
+// }
 
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub enum CalculatorAction {
     #[default] None,
     Insert(String, bool),
-    Cursor(CursorDirection),
+    //Cursor(CursorDirection),
+    //Delete(bool),
     Backspace(bool),
-    Delete(bool),
-    Clear(bool),
+    Clear,
     Submit
 }
 
@@ -107,6 +106,7 @@ pub enum CalculatorAction {
 #[derive(Debug, PartialEq, Default)]
 pub enum CalculatorResult {
     #[default] None,
+    RefreshDisplay,
     Number(f64),
     State(CalculatorState),
     NumberAndState(f64, CalculatorState),
@@ -235,64 +235,60 @@ impl Window {
         match action {
             CalculatorAction::None => Ok(CalculatorResult::None),
             CalculatorAction::Insert(content, preview) => {
-                /*
-                 * If buffer is empty, calculator history isn't empty, and content is:
-                 *  - a binary infix operator
-                 *  - a unary suffix operator
-                 *  - a binary function id
-                 * Then prefix the content with $0
-                 */
-                let prepend_history = if let Some(calculator) = &self.calculator {
+                if let Some(calculator) = &self.calculator {
+                    let mut new_content = content;
+                
+                    let parser = calculator.parser();
+                    let interpreter = calculator.interpreter();
+    
+                    /*
+                     * If buffer is empty, and history is not, and content is an infix or suffix operator,
+                     * prepend with $0.
+                     */
                     if self.buffer.is_empty() && calculator.has_history() {
-                        let parser = calculator.parser();
-                        
-                        if parser.parse_expression::<calculator_parser::expression::BinopInfix>(content.as_str()).is_ok()
-                            || parser.parse_expression::<calculator_parser::expression::UnopSuffix>(content.as_str()).is_ok() {
-                            true
+                        if parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() {
+                            new_content = format!("$0 {new_content} ");
                         }
-                        else if let Ok(id) = parser.parse_expression::<calculator_parser::expression::IdToken>(content.as_str()) {
-                            let interpreter = calculator.interpreter();
+                        else if parser.parse_expression::<calculator_parser::expression::UnopSuffix>(new_content.as_str()).is_ok() {
+                            new_content = format!("$0{new_content}");
+                        }
+                        else if let Ok(id) = parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()) {
                             let func = interpreter.get_func_by_name(id.value.as_str());
 
-                            func.map_or_else(|| false, |f| matches!(f.args, FunctionArgs::Two(_)))
+                            if func.is_some() {
+                                new_content = format!("$0 {new_content} ");
+                            }
                         }
-                        else {
-                            false
-                        }
+                    }
+                    else if !self.buffer.is_empty() && self.cursor == self.buffer.len() 
+                        && (parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() 
+                            || parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()).is_ok()) {
+                        new_content = format!("{}{new_content} ", if self.buffer.ends_with(' ') { "" } else { " " });
+                    }
+    
+                    self.insert_at_cursor(new_content.as_str());
+
+                    if preview {
+                        self.evaluate_buffer_preview()
                     }
                     else {
-                        false
+                        Ok(CalculatorResult::RefreshDisplay)
                     }
                 }
                 else {
-                    false
-                };
-                
-                if prepend_history {
-                    let new_content = format!("$0 {content} ");
-                    self.insert_at_cursor(new_content.as_str());
-                }
-                else {
-                    self.insert_at_cursor(content.as_str());
-                }
-
-                if preview {
-                    self.evaluate_buffer_preview()
-                }
-                else {
-                    Ok(CalculatorResult::None)
+                    Err(CalculatorErr::err("Calculator not initialized!"))
                 }
             },
-            CalculatorAction::Cursor(direction) => {
-                match direction {
-                    CursorDirection::Up => (),
-                    CursorDirection::Down => (),
-                    CursorDirection::Left => self.decrement_cursor(),
-                    CursorDirection::Right => self.increment_cursor(),
-                };
+            // CalculatorAction::Cursor(direction) => {
+            //     match direction {
+            //         CursorDirection::Up => (),
+            //         CursorDirection::Down => (),
+            //         CursorDirection::Left => self.decrement_cursor(),
+            //         CursorDirection::Right => self.increment_cursor(),
+            //     };
 
-                Ok(CalculatorResult::None)
-            },
+            //     Ok(CalculatorResult::None)
+            // },
             CalculatorAction::Backspace(preview) => {
                 if self.cursor > 0 {
                     self.buffer_remove_range(self.cursor - 1..=self.cursor - 1);
@@ -301,42 +297,31 @@ impl Window {
                         self.evaluate_buffer_preview()
                     }
                     else {
-                        Ok(CalculatorResult::None)
+                        Ok(CalculatorResult::RefreshDisplay)
                     }
                 }
                 else {
                     Ok(CalculatorResult::None)
                 }
             },
-            CalculatorAction::Delete(preview) => {
-                if self.cursor < self.buffer.len() {
-                    self.buffer_remove_range(self.cursor..=self.cursor);
+            // CalculatorAction::Delete(preview) => {
+            //     if self.cursor < self.buffer.len() {
+            //         self.buffer_remove_range(self.cursor..=self.cursor);
                     
-                    if preview {
-                        self.evaluate_buffer_preview()
-                    }
-                    else {
-                        Ok(CalculatorResult::None)
-                    }
-                }
-                else {
-                    Ok(CalculatorResult::None)
-                }
-            },
-            CalculatorAction::Clear(preview) => {
-                if !self.buffer.is_empty() {
-                    self.buffer_clear();
-
-                    if preview {
-                        self.evaluate_buffer_preview()
-                    }
-                    else {
-                        Ok(CalculatorResult::None)
-                    }
-                }
-                else {
-                    Ok(CalculatorResult::None)
-                }
+            //         if preview {
+            //             self.evaluate_buffer_preview()
+            //         }
+            //         else {
+            //             Ok(CalculatorResult::RefreshDisplay)
+            //         }
+            //     }
+            //     else {
+            //         Ok(CalculatorResult::None)
+            //     }
+            // },
+            CalculatorAction::Clear => {
+                self.buffer_clear();
+                Ok(CalculatorResult::RefreshDisplay)
             }
             CalculatorAction::Submit => self.evaluate_buffer(),
         }
