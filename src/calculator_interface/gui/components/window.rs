@@ -83,20 +83,10 @@ impl_scope! {
     }
 }
 
-// #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
-// pub enum CursorDirection {
-//     #[default] Up,
-//     Left,
-//     Down,
-//     Right
-// }
-
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub enum CalculatorAction {
     #[default] None,
     Insert(String, bool),
-    //Cursor(CursorDirection),
-    //Delete(bool),
     Backspace(bool),
     Clear,
     Submit
@@ -302,16 +292,6 @@ impl Window {
                     Err(CalculatorErr::err("Calculator not initialized!"))
                 }
             },
-            // CalculatorAction::Cursor(direction) => {
-            //     match direction {
-            //         CursorDirection::Up => (),
-            //         CursorDirection::Down => (),
-            //         CursorDirection::Left => self.decrement_cursor(),
-            //         CursorDirection::Right => self.increment_cursor(),
-            //     };
-
-            //     Ok(CalculatorResult::None)
-            // },
             CalculatorAction::Backspace(preview) => {
                 if self.cursor > 0 {
                     self.buffer_remove_end(1_usize, true);
@@ -328,21 +308,6 @@ impl Window {
                     Ok(CalculatorResult::None)
                 }
             },
-            // CalculatorAction::Delete(preview) => {
-            //     if self.cursor < self.buffer.len() {
-            //         self.buffer_remove_range(self.cursor..=self.cursor);
-                    
-            //         if preview {
-            //             self.evaluate_buffer_preview()
-            //         }
-            //         else {
-            //             Ok(CalculatorResult::RefreshDisplay)
-            //         }
-            //     }
-            //     else {
-            //         Ok(CalculatorResult::None)
-            //     }
-            // },
             CalculatorAction::Clear => {
                 self.buffer_clear();
                 Ok(CalculatorResult::RefreshDisplay)
