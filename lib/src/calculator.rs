@@ -1,9 +1,11 @@
+pub mod calculator_parser;
+pub mod calculator_interpreter;
 pub mod calculator_err;
 
 use std::fmt::Debug;
 
-use super::{calculator_interpreter::{interpreter::Interpreter}, calculator_parser::parser::Parser};
-pub use super::calculator_interpreter::interpreter::EvaluateOptions as InterpreterOptions;
+use calculator_interpreter::interpreter::{Interpreter, EvaluateOptions as InterpreterOptions};
+use calculator_parser::parser::Parser;
 use calculator_err::CalculatorErr;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]

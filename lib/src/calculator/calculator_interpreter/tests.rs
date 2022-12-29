@@ -1,7 +1,7 @@
 use std::ops::{Range, RangeInclusive};
 
 use super::interpreter::*;
-use crate::calculator_logic::calculator_parser::{parser::Parser, expression::Expr};
+use crate::calculator::calculator_parser::{parser::Parser, expression::Expr};
 
 fn parse(input: &str) -> Expr {
     match Parser::default().parse(input) {

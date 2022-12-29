@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::calculator_logic;
+use super::calculator;
 
 const EXIT_COMMAND: &str = ":exit";
 const CLEAR_COMMAND: &str = ":clear";
@@ -9,11 +9,11 @@ const CLEAR_MEMORY_COMMAND: &str = ":clear-mem";
 
 #[derive(Debug, Clone, Default)]
 pub struct ConsoleUI {
-    calculator: calculator_logic::calculator::Calculator
+    calculator: calculator::Calculator
 }
 
 impl ConsoleUI {
-    pub fn new(calculator: calculator_logic::calculator::Calculator) -> Self {
+    pub fn new(calculator: calculator::Calculator) -> Self {
         Self {
             calculator
         }

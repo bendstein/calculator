@@ -1,9 +1,6 @@
 use std::ops::RangeBounds;
 
-use calculator::calculator_logic;
-
-use calculator_logic::calculator::{*, calculator_err::CalculatorErr};
-use calculator_logic::calculator_parser;
+use super::calculator::{*, calculator_parser, calculator_interpreter::interpreter::EvaluateOptions as InterpreterOptions, calculator_err::CalculatorErr};
 
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub enum CalculatorAction {
