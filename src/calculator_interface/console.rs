@@ -17,9 +17,6 @@ impl CalculatorUI for ConsoleUI {
     fn start(&mut self, calculator: calculator_logic::calculator::Calculator) -> Result<(), String> {
         self.calculator = calculator;
 
-        //Set to use virtual terminal so that control characters work on windows
-        _ = colored::control::set_virtual_terminal(true);
-
         println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, '{CLEAR_HISTORY_COMMAND}' to clear result history, '{CLEAR_MEMORY_COMMAND}' to clear calculator memory, or '{EXIT_COMMAND}' to exit.");
 
         loop {
