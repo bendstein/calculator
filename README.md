@@ -151,4 +151,4 @@ This calculator has several built-in functions.
 ----
   - ~~Report error reasons during parsing.~~ (Done)
   - Implement GUI?
-    - Using kas (https://docs.rs/kas/0.12.0/kas/)
+    - Using wasm via yew (https://yew.rs/docs/getting-started/introduction)
