@@ -3,6 +3,7 @@
 pub use calculator::calculator;
 
 mod calculator_interface;
+mod yew_app;
 
 fn main() {
     //Create the calculator

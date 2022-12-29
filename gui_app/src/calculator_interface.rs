@@ -1,5 +1,7 @@
 use std::ops::RangeBounds;
 
+use crate::yew_app;
+
 use super::calculator::{*, calculator_parser, calculator_interpreter::interpreter::EvaluateOptions as InterpreterOptions, calculator_err::CalculatorErr};
 
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
@@ -48,6 +50,7 @@ impl Default for GraphicalUI {
 
 impl GraphicalUI {
     pub fn start(&mut self) -> Result<(), String> {
+        yew_app::run();
         Ok(())
     }
 
