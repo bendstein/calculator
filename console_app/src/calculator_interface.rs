@@ -1,7 +1,6 @@
 use std::io::Write;
 
 use crate::calculator_logic;
-use super::ui_trait::*;
 
 const EXIT_COMMAND: &str = ":exit";
 const CLEAR_COMMAND: &str = ":clear";
@@ -13,10 +12,14 @@ pub struct ConsoleUI {
     calculator: calculator_logic::calculator::Calculator
 }
 
-impl CalculatorUI for ConsoleUI {
-    fn start(&mut self, calculator: calculator_logic::calculator::Calculator) -> Result<(), String> {
-        self.calculator = calculator;
+impl ConsoleUI {
+    pub fn new(calculator: calculator_logic::calculator::Calculator) -> Self {
+        Self {
+            calculator
+        }
+    }
 
+    pub fn start(&mut self) -> Result<(), String> {
         println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, '{CLEAR_HISTORY_COMMAND}' to clear result history, '{CLEAR_MEMORY_COMMAND}' to clear calculator memory, or '{EXIT_COMMAND}' to exit.");
 
         loop {

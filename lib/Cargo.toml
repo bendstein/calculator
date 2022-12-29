@@ -1,0 +1,13 @@
+[package]
+name = "calculator"
+version = "0.4.0"
+edition = "2021"
+
+[dependencies]
+regex = { version = "1" }
+unicode-segmentation = { version = "1.9.0" }
+lazy_static = { version = "1.4.0" }
+rand = { version = "0.8.4" }
+
+[lib]
+name = "calculator"

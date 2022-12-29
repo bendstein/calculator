@@ -1,24 +1,10 @@
-[package]
-name = "calculator"
+[workspace]
+members = [
+    "lib",
+    "console_app",
+    "gui_app"
+]
+
+[workspace.package]
 version = "0.4.0"
 edition = "2021"
-
-[dependencies]
-regex = { version = "1" }
-unicode-segmentation = { version = "1.9.0" }
-lazy_static = { version = "1.4.0" }
-rand = { version = "0.8.4" }
-colored = { version = "2.0.0", optional = true }
-
-[features]
-console-binary = [ "colored" ]
-
-[lib]
-name = "calculator"
-
-[[bin]]
-name = "console"
-required-features = [ "console-binary" ]
-
-[[bin]]
-name = "gui"

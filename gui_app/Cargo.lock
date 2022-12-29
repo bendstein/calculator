@@ -69,14 +69,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gui"
-version = "0.4.0"
-dependencies = [
- "calculator",
- "colored",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"

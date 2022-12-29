@@ -1,8 +1,6 @@
-
 use std::ops::RangeBounds;
 
-use crate::calculator_logic;
-use super::ui_trait::*;
+use calculator::calculator_logic;
 
 use calculator_logic::calculator::{*, calculator_err::CalculatorErr};
 use calculator_logic::calculator_parser;
@@ -30,32 +28,30 @@ pub enum CalculatorResult {
 #[derive(Debug, Clone)]
 pub struct GraphicalUI 
 { 
-    calculator: Option<calculator_logic::calculator::Calculator>,
+    calculator: Calculator,
     buffer: String,
     cursor: usize
 }
 
-impl CalculatorUI for GraphicalUI {
-    fn start(&mut self, calculator: Calculator) -> Result<(), String> {
-        self.calculator = Some(calculator);
-
-        Ok(())
-    }
-}
-
-impl Default for GraphicalUI {
-    fn default() -> Self {
+impl GraphicalUI {
+    pub fn new(calculator: Calculator) -> Self {
         Self {
-            calculator: None,
+            calculator,
             buffer: String::from(""),
             cursor: 0
         }
     }
 }
 
+impl Default for GraphicalUI {
+    fn default() -> Self {
+        Self::new(Calculator::default())
+    }
+}
+
 impl GraphicalUI {
-    pub fn attach_calculator(&mut self, calculator: calculator_logic::calculator::Calculator) {
-        self.calculator = Some(calculator);
+    pub fn start(&mut self) -> Result<(), String> {
+        Ok(())
     }
 
     fn buffer_append(&mut self, content: &str) {
@@ -114,20 +110,14 @@ impl GraphicalUI {
     }
 
     fn evaluate_buffer(&self) -> Result<CalculatorResult, calculator_err::CalculatorErr> {
-        match &self.calculator {
-            None => Err(CalculatorErr::err("Calculator Not Initialized")),
-            Some(calculator) => calculator
-                .evaluate_with_options(&self.buffer, EvaluateOptions::default())
-                .map(|(n, state)| CalculatorResult::NumberAndState(n, state))
-        }
+        self.calculator
+            .evaluate_with_options(&self.buffer, EvaluateOptions::default())
+            .map(|(n, state)| CalculatorResult::NumberAndState(n, state))
     }
 
-    fn evaluate_buffer_preview(&self) -> Result<CalculatorResult, calculator_err::CalculatorErr> {
-        match &self.calculator {
-            None => Err(CalculatorErr::err("Calculator Not Initialized")),
-            Some(calculator) => Ok(CalculatorResult::PreviewNumberAndState(calculator
-                .evaluate_with_options(&self.buffer, EvaluateOptions::new(InterpreterOptions::new(true)))))
-        }
+    fn evaluate_buffer_preview(&self) -> CalculatorResult {
+        CalculatorResult::PreviewNumberAndState(self.calculator
+            .evaluate_with_options(&self.buffer, EvaluateOptions::new(InterpreterOptions::new(true))))
     }
 
     fn insert_at_cursor(&mut self, content: &str) {
@@ -167,66 +157,61 @@ impl GraphicalUI {
         match action {
             CalculatorAction::None => Ok(CalculatorResult::None),
             CalculatorAction::Insert(content, preview) => {
-                if let Some(calculator) = &self.calculator {
-                    let mut new_content = content;
+                let mut new_content = content;
                 
-                    let parser = calculator.parser();
-                    let interpreter = calculator.interpreter();
-    
-                    /*
-                     * If buffer is empty, and history is not, and content is an infix or suffix operator,
-                     * prepend with $0.
-                     */
-                    if self.buffer.is_empty() && calculator.has_history()
-                        && parser.parse_expression::<calculator_parser::expression::UnopPrefix>(new_content.as_str()).is_err() {
-                        if parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() {
+                let parser = self.calculator.parser();
+                let interpreter = self.calculator.interpreter();
+
+                /*
+                    * If buffer is empty, and history is not, and content is an infix or suffix operator,
+                    * prepend with $0.
+                    */
+                if self.buffer.is_empty() && self.calculator.has_history()
+                    && parser.parse_expression::<calculator_parser::expression::UnopPrefix>(new_content.as_str()).is_err() {
+                    if parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() {
+                        new_content = format!("$0 {new_content} ");
+                    }
+                    else if parser.parse_expression::<calculator_parser::expression::UnopSuffix>(new_content.as_str()).is_ok() {
+                        new_content = format!("$0{new_content}");
+                    }
+                    else if let Ok(id) = parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()) {
+                        let func = interpreter.get_func_by_name(id.value.as_str());
+
+                        if func.is_some() {
                             new_content = format!("$0 {new_content} ");
                         }
-                        else if parser.parse_expression::<calculator_parser::expression::UnopSuffix>(new_content.as_str()).is_ok() {
-                            new_content = format!("$0{new_content}");
-                        }
-                        else if let Ok(id) = parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()) {
-                            let func = interpreter.get_func_by_name(id.value.as_str());
-
-                            if func.is_some() {
-                                new_content = format!("$0 {new_content} ");
-                            }
-                        }
-                    }
-                    /*
-                     * If buffer isn't empty, and appending to end of buffer, and content is an infix operator,
-                     * surround operator with spaces
-                     */
-                    else if !self.buffer.is_empty() && self.cursor == self.buffer.len() 
-                        && (parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() 
-                            || parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()).is_ok()) {
-                        new_content = format!("{}{new_content} ", if self.buffer.ends_with(' ') { "" } else { " " });
-                    }
-                    /*
-                     * If buffer isn't empty, and appending to end of buffer, and content is a suffix operator,
-                     * put a space after it, and remove any spaces before it
-                     */
-                    else if !self.buffer.is_empty() && self.cursor == self.buffer.len() 
-                        && parser.parse_expression::<calculator_parser::expression::UnopSuffix>(new_content.as_str()).is_ok() {
-                            if self.buffer.ends_with(' ') {
-                                let trimmed = self.buffer.trim_end();
-                                self.buffer = String::from(trimmed);
-                                self.cursor = self.cursor.min(self.buffer.len());
-                            }
-                            new_content = format!("{new_content} ");
-                        }
-    
-                    self.insert_at_cursor(new_content.as_str());
-
-                    if preview {
-                        self.evaluate_buffer_preview()
-                    }
-                    else {
-                        Ok(CalculatorResult::RefreshDisplay)
                     }
                 }
+                /*
+                    * If buffer isn't empty, and appending to end of buffer, and content is an infix operator,
+                    * surround operator with spaces
+                    */
+                else if !self.buffer.is_empty() && self.cursor == self.buffer.len() 
+                    && (parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() 
+                        || parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()).is_ok()) {
+                    new_content = format!("{}{new_content} ", if self.buffer.ends_with(' ') { "" } else { " " });
+                }
+                /*
+                    * If buffer isn't empty, and appending to end of buffer, and content is a suffix operator,
+                    * put a space after it, and remove any spaces before it
+                    */
+                else if !self.buffer.is_empty() && self.cursor == self.buffer.len() 
+                    && parser.parse_expression::<calculator_parser::expression::UnopSuffix>(new_content.as_str()).is_ok() {
+                        if self.buffer.ends_with(' ') {
+                            let trimmed = self.buffer.trim_end();
+                            self.buffer = String::from(trimmed);
+                            self.cursor = self.cursor.min(self.buffer.len());
+                        }
+                        new_content = format!("{new_content} ");
+                    }
+
+                self.insert_at_cursor(new_content.as_str());
+
+                if preview {
+                    Ok(self.evaluate_buffer_preview())
+                }
                 else {
-                    Err(CalculatorErr::err("Calculator not initialized!"))
+                    Ok(CalculatorResult::RefreshDisplay)
                 }
             },
             CalculatorAction::Backspace(preview) => {
@@ -235,7 +220,7 @@ impl GraphicalUI {
                     self.cursor = self.cursor.min(self.buffer.len());
 
                     if preview {
-                        self.evaluate_buffer_preview()
+                        Ok(self.evaluate_buffer_preview())
                     }
                     else {
                         Ok(CalculatorResult::RefreshDisplay)
