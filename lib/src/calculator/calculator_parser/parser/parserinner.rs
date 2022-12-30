@@ -1,11 +1,13 @@
 pub mod parsableimpl;
 
 use unicode_segmentation::{self, UnicodeSegmentation};
-use super::{ super::{ terminal::*, expression as xpr }, parsererr::*, ParserSettings };
+use crate::calculator::calculator_parser::{ terminal::*, expression as xpr };
+use crate::calculator::calculator_parser::parser::ParserSettings;
+use crate::calculator::CalculatorErr;
 
 pub trait Parsable
     where Self : Sized { 
-    fn parse_from(_: &mut ParserInner) -> Result<Self, ParserErr>;
+    fn parse_from(_: &mut ParserInner) -> Result<Self, CalculatorErr>;
 }
 
 
@@ -35,7 +37,7 @@ impl<'a> ParserInner<'a> {
         self.lah = 0
     }
 
-    pub fn parse_expression<T : Parsable>(&mut self) -> Result<T, ParserErr> {
+    pub fn parse_expression<T : Parsable>(&mut self) -> Result<T, CalculatorErr> {
         T::parse_from(self)
     }
 
@@ -53,7 +55,7 @@ impl<'a> ParserInner<'a> {
         self.token_at(self.lah - 1)
     }
 
-    pub fn expr_prime(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    pub fn expr_prime(&mut self) -> Result<xpr::ExprPrime, CalculatorErr> {
         //Optional whitespace
         self.whitespace();
 
@@ -66,7 +68,7 @@ impl<'a> ParserInner<'a> {
         result
     }
 
-    pub fn expr_id_fn(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    pub fn expr_id_fn(&mut self) -> Result<xpr::ExprPrime, CalculatorErr> {
         //First handle operators of higher priority to account for operator precedence
         let expr_2_result = self.expr_2();
 
@@ -76,7 +78,7 @@ impl<'a> ParserInner<'a> {
                 return Err(expr_2_err);
             }
             else {
-                return Err(ParserErr::default())
+                return Err(CalculatorErr::default())
             }
         }
 
@@ -118,7 +120,7 @@ impl<'a> ParserInner<'a> {
                     return Err(expr_2_suffix_err);
                 }
                 else {
-                    return Err(ParserErr::err(format!("Expected expression after function '{}'.", id.value).as_str(), self.lah))
+                    return Err(CalculatorErr::parse_err(format!("Expected expression after function '{}'.", id.value).as_str(), true, self.lah))
                 }
             }
 
@@ -137,7 +139,7 @@ impl<'a> ParserInner<'a> {
         }
     }
 
-    pub fn expr_2(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    pub fn expr_2(&mut self) -> Result<xpr::ExprPrime, CalculatorErr> {
         //First handle operators of higher priority to account for operator precedence
         let expr_1_result = self.expr_1();
 
@@ -147,7 +149,7 @@ impl<'a> ParserInner<'a> {
                 return Err(expr_1_err);
             }
             else {
-                return Err(ParserErr::default())
+                return Err(CalculatorErr::default())
             }
         }
 
@@ -189,7 +191,7 @@ impl<'a> ParserInner<'a> {
                     return Err(expr_1_suffix_err);
                 }
                 else {
-                    return Err(ParserErr::err(format!("Expected expression after operator '{binop_in_2}'").as_str(), self.lah))
+                    return Err(CalculatorErr::parse_err(format!("Expected expression after operator '{binop_in_2}'").as_str(), true, self.lah))
                 }
             }
 
@@ -208,7 +210,7 @@ impl<'a> ParserInner<'a> {
         }
     }
 
-    pub fn expr_1(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    pub fn expr_1(&mut self) -> Result<xpr::ExprPrime, CalculatorErr> {
         //First handle operators of higher priority to account for operator precedence
         let expr_0_result = self.expr_0();
 
@@ -218,7 +220,7 @@ impl<'a> ParserInner<'a> {
                 return Err(expr_0_err);
             }
             else {
-                return Err(ParserErr::default())
+                return Err(CalculatorErr::default())
             }
         }
 
@@ -260,7 +262,7 @@ impl<'a> ParserInner<'a> {
                     return Err(expr_0_suffix_err);
                 }
                 else {
-                    return Err(ParserErr::err(format!("Expected expression after operator '{binop_in_1}'").as_str(), self.lah))
+                    return Err(CalculatorErr::parse_err(format!("Expected expression after operator '{binop_in_1}'").as_str(), true, self.lah))
                 }
             }
 
@@ -279,7 +281,7 @@ impl<'a> ParserInner<'a> {
         }
     }
 
-    pub fn expr_0(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    pub fn expr_0(&mut self) -> Result<xpr::ExprPrime, CalculatorErr> {
         //First handle operators of higher priority to account for operator precedence
         let expr_base_result = self.expr_base();
 
@@ -289,7 +291,7 @@ impl<'a> ParserInner<'a> {
                 return Err(expr_base_err);
             }
             else {
-                return Err(ParserErr::default())
+                return Err(CalculatorErr::default())
             }
         }
 
@@ -331,7 +333,7 @@ impl<'a> ParserInner<'a> {
                     return Err(expr_0_suffix_err);
                 }
                 else {
-                    return Err(ParserErr::err(format!("Expected expression after operator {binop_in_0}").as_str(), self.lah))
+                    return Err(CalculatorErr::parse_err(format!("Expected expression after operator {binop_in_0}").as_str(), true, self.lah))
                 }
             }
 
@@ -350,10 +352,10 @@ impl<'a> ParserInner<'a> {
         }
     }
 
-    pub fn expr_base(&mut self) -> Result<xpr::ExprPrime, ParserErr> {     
+    pub fn expr_base(&mut self) -> Result<xpr::ExprPrime, CalculatorErr> {     
         let initial_lah = self.lah;
 
-        let mut result: Option<Result<xpr::ExprPrime, ParserErr>>;
+        let mut result: Option<Result<xpr::ExprPrime, CalculatorErr>>;
 
         let mut unop_prefixes: Vec<xpr::UnopPrefix> = Vec::new();
         let mut unop_suffixes: Vec<xpr::UnopSuffix> = Vec::new();
@@ -483,11 +485,11 @@ impl<'a> ParserInner<'a> {
         else {
             //Failed to match. Rollback lah and return error
             self.lah = initial_lah;
-            Err(ParserErr::default())
+            Err(CalculatorErr::default())
         }
     }
 
-    pub fn number(&mut self) -> Result<xpr::NumberToken, ParserErr> {
+    pub fn number(&mut self) -> Result<xpr::NumberToken, CalculatorErr> {
         let mut current_lah = self.lah;
 
         let mut collected: Vec<&str> = Vec::new();
@@ -507,7 +509,7 @@ impl<'a> ParserInner<'a> {
 
         //Make sure at least one digit is present
         if collected.is_empty() {
-            return Err(ParserErr::default());
+            return Err(CalculatorErr::default());
         }
 
         //Check if the next symbol is a decimal point
@@ -535,7 +537,7 @@ impl<'a> ParserInner<'a> {
             //Make sure at least one digit is present
             if collected_1.is_empty() {
                 let concatenated = collected.join("");
-                return Err(ParserErr::err(format!("Expected digit after '{concatenated}.'").as_str(), self.lah));
+                return Err(CalculatorErr::parse_err(format!("Expected digit after '{concatenated}.'").as_str(), true, self.lah));
             }
 
             //Successfully matched. Record progress in outer state
@@ -551,14 +553,14 @@ impl<'a> ParserInner<'a> {
         let parsed= concatenated.parse::<f64>();
 
         if let Err(_parse_int_err) = parsed {
-            return Err(ParserErr::err(format!("Failed to parse number '{concatenated}'.").as_str(), self.lah));
+            return Err(CalculatorErr::parse_err(format!("Failed to parse number '{concatenated}'.").as_str(), true, self.lah));
         }
 
         self.lah = current_lah;
         Ok(xpr::NumberToken::new(parsed.unwrap()))
     }
 
-    pub fn func(&mut self) -> Result<xpr::Func, ParserErr> {
+    pub fn func(&mut self) -> Result<xpr::Func, CalculatorErr> {
         let initial_lah = self.lah;
         
         //Try to match id
@@ -587,7 +589,7 @@ impl<'a> ParserInner<'a> {
             //Not a constant. Rollback and return error if not present.
             else {
                 self.lah = initial_lah;
-                return Err(ParserErr::default());
+                return Err(CalculatorErr::default());
             }
         }
 
@@ -653,7 +655,7 @@ impl<'a> ParserInner<'a> {
                             }
                         };
 
-                        return Err(ParserErr::err(format!("Expected function argument after '{}({concatenated}'.", id.value).as_str(), self.lah))
+                        return Err(CalculatorErr::parse_err(format!("Expected function argument after '{}({concatenated}'.", id.value).as_str(), true, self.lah))
                     }
                 }
 
@@ -689,7 +691,7 @@ impl<'a> ParserInner<'a> {
                 }
             };
 
-            return Err(ParserErr::err(format!("Expected closing parenthesis ')' after '{}({concatenated}'.", id.value).as_str(), self.lah));
+            return Err(CalculatorErr::parse_err(format!("Expected closing parenthesis ')' after '{}({concatenated}'.", id.value).as_str(), true, self.lah));
         }
 
         if func_args.is_empty() {
@@ -700,7 +702,7 @@ impl<'a> ParserInner<'a> {
         }
     }
 
-    pub fn id(&mut self) -> Result<xpr::IdToken, ParserErr> {
+    pub fn id(&mut self) -> Result<xpr::IdToken, CalculatorErr> {
         let mut current_lah = self.lah;
         
         let mut symbols: Vec<&str> = Vec::new();
@@ -739,7 +741,7 @@ impl<'a> ParserInner<'a> {
         let concatenated = symbols.join("");
 
         if !seen_letter {
-            return Err(ParserErr::default());
+            return Err(CalculatorErr::default());
         }
 
         //Record lah progress and return id
@@ -748,7 +750,7 @@ impl<'a> ParserInner<'a> {
         Ok(xpr::IdToken::new(concatenated.as_str()))
     }
 
-    pub fn history_memory(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    pub fn history_memory(&mut self) -> Result<xpr::ExprPrime, CalculatorErr> {
         let initial_lah = self.lah;
         
         //Try to match the history stack access symbol
@@ -757,7 +759,7 @@ impl<'a> ParserInner<'a> {
         //History stack access symbol is required. Rollback and return error if not present.
         if !xpr::Token::History(0_usize).get_terminal().match_symbol(token) {
             self.lah = initial_lah;
-            return Err(ParserErr::default());
+            return Err(CalculatorErr::default());
         }
 
         let mut current_lah = initial_lah + 1;
@@ -786,10 +788,10 @@ impl<'a> ParserInner<'a> {
         //Make sure at least one digit is present
         if digits.is_empty() {
             if is_memory {
-                return Err(ParserErr::err(format!("Expected digit after memory access token '{}'", terminals::MEMORY.to_string()).as_str(), self.lah));
+                return Err(CalculatorErr::parse_err(format!("Expected digit after memory access token '{}'", terminals::MEMORY.to_string()).as_str(), true, self.lah));
             }
             else {
-                return Err(ParserErr::err(format!("Expected digit after history access token '{}'", terminals::HISTORY.to_string()).as_str(), self.lah));
+                return Err(CalculatorErr::parse_err(format!("Expected digit after history access token '{}'", terminals::HISTORY.to_string()).as_str(), true, self.lah));
             }
         }
         
@@ -798,7 +800,7 @@ impl<'a> ParserInner<'a> {
         let parsed= concatenated.parse::<usize>();
 
         if let Err(_parse_int_err) = parsed {
-            return Err(ParserErr::err(format!("Failed to parse number '{concatenated}'.").as_str(), self.lah));
+            return Err(CalculatorErr::parse_err(format!("Failed to parse number '{concatenated}'.").as_str(), true, self.lah));
         }
 
         self.lah = current_lah;
@@ -820,8 +822,8 @@ impl<'a> ParserInner<'a> {
                         return Err(subexpr_err);
                     }
                     else {
-                        return Err(ParserErr::err(format!("Expected expression after memory assignment '{}{concatenated}{}'.", 
-                            terminals::MEMORY.to_string(), terminals::OP_SETMEM.to_string()).as_str(), self.lah));
+                        return Err(CalculatorErr::parse_err(format!("Expected expression after memory assignment '{}{concatenated}{}'.", 
+                            terminals::MEMORY.to_string(), terminals::OP_SETMEM.to_string()).as_str(), true, self.lah));
                     }
                 }
 
@@ -842,7 +844,7 @@ impl<'a> ParserInner<'a> {
         Ok(expr)
     }
 
-    pub fn paren_expression_paren(&mut self) -> Result<xpr::ExprPrime, ParserErr> {
+    pub fn paren_expression_paren(&mut self) -> Result<xpr::ExprPrime, CalculatorErr> {
         let initial_lah = self.lah;
 
         //Try to match an opening paren
@@ -851,7 +853,7 @@ impl<'a> ParserInner<'a> {
         //Opening paren is required. Rollback and return error if not present.
         if !xpr::Token::OpParO.get_terminal().match_symbol(token) {
             self.lah = initial_lah;
-            return Err(ParserErr::default());
+            return Err(CalculatorErr::default());
         }
 
         //Optional whitespace
@@ -866,7 +868,7 @@ impl<'a> ParserInner<'a> {
                 return Err(expr_prime_err);
             }
             else {
-                return Err(ParserErr::err("Exepcted expression after opening parenthesis '('.", self.lah));
+                return Err(CalculatorErr::parse_err("Exepcted expression after opening parenthesis '('.", true, self.lah));
             }
         }
 
@@ -880,13 +882,13 @@ impl<'a> ParserInner<'a> {
 
         //Closing paren is required.
         if !xpr::Token::OpParC.get_terminal().match_symbol(token) {
-            return Err(ParserErr::err(format!("Expected closing parenthesis ')' after expression '({expr_prime}'.").as_str(), self.lah));
+            return Err(CalculatorErr::parse_err(format!("Expected closing parenthesis ')' after expression '({expr_prime}'.").as_str(), true, self.lah));
         }
 
         Ok(xpr::ExprPrime::ParenthesesExpression(Box::new(expr_prime)))
     }
 
-    pub fn unop_pre(&mut self) -> Result<xpr::UnopPrefix, ParserErr> {
+    pub fn unop_pre(&mut self) -> Result<xpr::UnopPrefix, CalculatorErr> {
         let initial_lah = self.lah;
         let current = self.get_and_increment();
 
@@ -909,10 +911,10 @@ impl<'a> ParserInner<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::default())
+        Err(CalculatorErr::default())
     }
 
-    pub fn unop_suf(&mut self) -> Result<xpr::UnopSuffix, ParserErr> {
+    pub fn unop_suf(&mut self) -> Result<xpr::UnopSuffix, CalculatorErr> {
         let initial_lah = self.lah;
         let current = self.get_and_increment();
 
@@ -935,10 +937,10 @@ impl<'a> ParserInner<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::default())
+        Err(CalculatorErr::default())
     }
 
-    pub fn binop_in(&mut self) -> Result<xpr::BinopInfix, ParserErr> {
+    pub fn binop_in(&mut self) -> Result<xpr::BinopInfix, CalculatorErr> {
 
         if let Ok(binop_in_0) = self.binop_in_0() {
             Ok(xpr::BinopInfix::from(binop_in_0))
@@ -950,11 +952,11 @@ impl<'a> ParserInner<'a> {
             Ok(xpr::BinopInfix::from(binop_in_2))
         }
         else {
-            Err(ParserErr::default())
+            Err(CalculatorErr::default())
         }
     }
 
-    pub fn binop_in_0(&mut self) -> Result<xpr::BinopInfix0, ParserErr> {
+    pub fn binop_in_0(&mut self) -> Result<xpr::BinopInfix0, CalculatorErr> {
         let initial_lah = self.lah;
         let current = self.get_and_increment();
 
@@ -977,10 +979,10 @@ impl<'a> ParserInner<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::default())
+        Err(CalculatorErr::default())
     }
 
-    pub fn binop_in_1(&mut self) -> Result<xpr::BinopInfix1, ParserErr> {
+    pub fn binop_in_1(&mut self) -> Result<xpr::BinopInfix1, CalculatorErr> {
         let initial_lah = self.lah;
         let current = self.get_and_increment();
 
@@ -1005,10 +1007,10 @@ impl<'a> ParserInner<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::default())
+        Err(CalculatorErr::default())
     }
 
-    pub fn binop_in_2(&mut self) -> Result<xpr::BinopInfix2, ParserErr> {
+    pub fn binop_in_2(&mut self) -> Result<xpr::BinopInfix2, CalculatorErr> {
         let initial_lah = self.lah;
         let current = self.get_and_increment();
 
@@ -1032,7 +1034,7 @@ impl<'a> ParserInner<'a> {
 
         //Match failed. Rollback and return error.
         self.lah = initial_lah;
-        Err(ParserErr::default())
+        Err(CalculatorErr::default())
     }
 
     pub fn whitespace(&mut self) {

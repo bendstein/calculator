@@ -73,12 +73,12 @@ impl Calculator {
 
         let parsed = match self.parser.parse(prepared_expression) {
             Ok(value) => value,
-            Err(e) => Err(CalculatorErr::err(format!("An error occurred while parsing expression '{prepared_expression}'. At {}: {e}", e.lah()).as_str()))?
+            Err(e) => Err(CalculatorErr::parse_err(format!("An error occurred while parsing expression '{prepared_expression}'. At {}: {e}", e.lah()).as_str(), false, e.lah()))?
         };
 
         let (evaluated, mem) = match self.interpreter.evaluate_with_options(parsed, options.interpreter()) {
             Ok(value) => value,
-            Err(e) => Err(CalculatorErr::err(format!("An error occurred while evaluating expression '{prepared_expression}': {e}").as_str()))?
+            Err(e) => Err(CalculatorErr::eval_err(format!("An error occurred while evaluating expression '{prepared_expression}': {e}").as_str()))?
         };
 
         Ok((evaluated, CalculatorState::new(mem.unwrap_or_else(|| self.interpreter.clone_mem()), self.interpreter.clone_stack())))

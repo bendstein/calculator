@@ -1,8 +1,8 @@
-pub mod parsererr;
 pub mod parserinner;
 
-use parsererr::*;
 use parserinner::*;
+use crate::calculator::calculator_err::CalculatorErr;
+
 use super::expression as xpr;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -40,12 +40,12 @@ impl Parser {
         ParserInner::new(self.settings, input)
     }
 
-    pub fn parse(&self, input: &str) -> Result<xpr::Expr, ParserErr> {
+    pub fn parse(&self, input: &str) -> Result<xpr::Expr, CalculatorErr> {
         self.create_parser(input)
             .parse_expression()
     }
 
-    pub fn parse_expression<TExpr: Parsable>(&self, input: &str) -> Result<TExpr, ParserErr> {
+    pub fn parse_expression<TExpr: Parsable>(&self, input: &str) -> Result<TExpr, CalculatorErr> {
         self.create_parser(input)
             .parse_expression()
     }

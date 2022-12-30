@@ -1,10 +1,9 @@
-pub mod interpreter_err;
 pub mod function;
 
-use interpreter_err::InterpreterErr;
 use function::{*, function_impl::*, function_lazy_static::*};
 use super::super::calculator_parser::expression;
 use std::{collections::HashMap, cell::RefCell};
+use crate::calculator::CalculatorErr;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct EvaluateOptions {
@@ -149,7 +148,7 @@ impl Interpreter {
     /**
      * Evaluate the given expression with the given options
      */
-    pub fn evaluate_with_options(&self, expression: expression::Expr, options: EvaluateOptions) -> Result<(f64, Option<Vec<f64>>), InterpreterErr> {
+    pub fn evaluate_with_options(&self, expression: expression::Expr, options: EvaluateOptions) -> Result<(f64, Option<Vec<f64>>), CalculatorErr> {
         let (evaluated_result, evaluated_memory) = match expression {
             expression::Expr::None => {
                 let result = Ok(0_f64);
@@ -166,7 +165,7 @@ impl Interpreter {
                 if options.preview {
                     let temp_mem = self.memory.borrow().clone();
 
-                    let result: Result<f64, InterpreterErr> = self.evaluate_expr_prime(*expr_prime);
+                    let result: Result<f64, CalculatorErr> = self.evaluate_expr_prime(*expr_prime);
 
                     let result_mem = self.memory.borrow().clone();
 
@@ -204,14 +203,14 @@ impl Interpreter {
     /**
      * Evaluate the given expression
      */
-    pub fn evaluate(&self, expression: expression::Expr) -> Result<f64, InterpreterErr> {
+    pub fn evaluate(&self, expression: expression::Expr) -> Result<f64, CalculatorErr> {
         match self.evaluate_with_options(expression, EvaluateOptions::default()) {
             Err(e) => Err(e),
             Ok((result, _)) => Ok(result)
         }
     }
 
-    fn evaluate_expr_prime(&self, expression: expression::ExprPrime) -> Result<f64, InterpreterErr> {
+    fn evaluate_expr_prime(&self, expression: expression::ExprPrime) -> Result<f64, CalculatorErr> {
         match expression {
             expression::ExprPrime::Number(n) => self.evaluate_number(n),
             expression::ExprPrime::History(h) => self.evaluate_hist(h),
@@ -227,11 +226,11 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_number(&self, expression: expression::NumberToken) -> Result<f64, InterpreterErr> {
+    fn evaluate_number(&self, expression: expression::NumberToken) -> Result<f64, CalculatorErr> {
         Ok(expression.value)
     }
 
-    fn evaluate_func(&self, expression: expression::Func) -> Result<f64, InterpreterErr> {
+    fn evaluate_func(&self, expression: expression::Func) -> Result<f64, CalculatorErr> {
         let id: String;
         let args: Vec<expression::ExprPrime>;
 
@@ -255,21 +254,21 @@ impl Interpreter {
         .collect();
 
         if matching.is_empty() {
-            return Err(InterpreterErr::new(format!("No such function '{id}'.").as_str()))
+            return Err(CalculatorErr::interp_err(format!("No such function '{id}'.").as_str()))
         }
 
         let (_, function) = matching.first().unwrap();
 
-        fn validate_args_count(name: &str, expected: usize, actual: usize) -> Result<(), InterpreterErr> {
+        fn validate_args_count(name: &str, expected: usize, actual: usize) -> Result<(), CalculatorErr> {
             if actual != expected {
-                Err(InterpreterErr::new(format!("Function '{name}' expected {expected} arguments; got {actual}.").as_str()))
+                Err(CalculatorErr::interp_err(format!("Function '{name}' expected {expected} arguments; got {actual}.").as_str()))
             }
             else {
                 Ok(())
             }
         }
 
-        fn evaluate_args(interpreter: &Interpreter, args: Vec<expression::ExprPrime>) -> Result<Vec<f64>, InterpreterErr> {
+        fn evaluate_args(interpreter: &Interpreter, args: Vec<expression::ExprPrime>) -> Result<Vec<f64>, CalculatorErr> {
             let mut evaluated: Vec<f64> = Vec::new();
 
             for arg in args {
@@ -341,12 +340,12 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_hist(&self, expression: expression::HistoryToken) -> Result<f64, InterpreterErr> {
+    fn evaluate_hist(&self, expression: expression::HistoryToken) -> Result<f64, CalculatorErr> {
         match self.history.try_borrow() {
-            Err(borrow_error) => Err(InterpreterErr::new(format!("Failed to access past results: {borrow_error}").as_str())),
+            Err(borrow_error) => Err(CalculatorErr::interp_err(format!("Failed to access past results: {borrow_error}").as_str())),
             Ok(history) => {
                 if history.len() <= expression.value {
-                    Err(InterpreterErr::new(format!("History entry {} does not exist.", expression.value).as_str()))
+                    Err(CalculatorErr::interp_err(format!("History entry {} does not exist.", expression.value).as_str()))
                 }
                 else {
                     Ok(history[history.len() - (expression.value + 1)])
@@ -355,12 +354,12 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_mem(&self, expression: expression::MemoryToken) -> Result<f64, InterpreterErr> {
+    fn evaluate_mem(&self, expression: expression::MemoryToken) -> Result<f64, CalculatorErr> {
         match self.memory.try_borrow() {
-            Err(borrow_error) => Err(InterpreterErr::new(format!("Failed to access memory: {borrow_error}").as_str())),
+            Err(borrow_error) => Err(CalculatorErr::interp_err(format!("Failed to access memory: {borrow_error}").as_str())),
             Ok(memory) => {
                 if memory.len() <= expression.value {
-                    Err(InterpreterErr::new(format!("Memory entry {} does not exist.", expression.value).as_str()))
+                    Err(CalculatorErr::interp_err(format!("Memory entry {} does not exist.", expression.value).as_str()))
                 }
                 else {
                     Ok(memory[expression.value])
@@ -369,14 +368,14 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_store_mem(&self, memory_token: expression::MemoryToken, subexpr: expression::ExprPrime) -> Result<f64, InterpreterErr> {
+    fn evaluate_store_mem(&self, memory_token: expression::MemoryToken, subexpr: expression::ExprPrime) -> Result<f64, CalculatorErr> {
         let subexpr_value = self.evaluate_expr_prime(subexpr)?;
 
         match self.memory.try_borrow_mut() {
-            Err(borrow_error) => Err(InterpreterErr::new(format!("Failed to access memory: {borrow_error}").as_str())),
+            Err(borrow_error) => Err(CalculatorErr::interp_err(format!("Failed to access memory: {borrow_error}").as_str())),
             Ok(mut memory) => {
                 if memory.len() <= memory_token.value {
-                    Err(InterpreterErr::new(format!("Memory entry {} does not exist.", memory_token.value).as_str()))
+                    Err(CalculatorErr::interp_err(format!("Memory entry {} does not exist.", memory_token.value).as_str()))
                 }
                 else {
                     memory[memory_token.value] = subexpr_value;
@@ -386,11 +385,11 @@ impl Interpreter {
         }
     }
 
-    // fn evaluate_id(&self, expression: expression::IdToken) -> Result<f64, InterpreterErr> {
+    // fn evaluate_id(&self, expression: expression::IdToken) -> Result<f64, CalculatorErr> {
     //     unimplemented!()
     // }
 
-    fn evaluate_unary_prefixes(&self, prefixes: Vec<expression::UnopPrefix>, expression: expression::ExprPrime) -> Result<f64, InterpreterErr> {
+    fn evaluate_unary_prefixes(&self, prefixes: Vec<expression::UnopPrefix>, expression: expression::ExprPrime) -> Result<f64, CalculatorErr> {
         let mut subvalue = self.evaluate_expr_prime(expression)?;
 
         for prefix in prefixes {
@@ -402,7 +401,7 @@ impl Interpreter {
         Ok(subvalue)
     }
 
-    fn evaluate_unary_suffixes(&self, expression: expression::ExprPrime, suffixes: Vec<expression::UnopSuffix>) -> Result<f64, InterpreterErr> {
+    fn evaluate_unary_suffixes(&self, expression: expression::ExprPrime, suffixes: Vec<expression::UnopSuffix>) -> Result<f64, CalculatorErr> {
         let mut subvalue = self.evaluate_expr_prime(expression)?;
 
         for suffix in suffixes {
@@ -414,7 +413,7 @@ impl Interpreter {
         Ok(subvalue)
     }
 
-    fn evaluate_binary_infix_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::BinopInfix, Box<expression::ExprPrime>)>) -> Result<f64, InterpreterErr> {
+    fn evaluate_binary_infix_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::BinopInfix, Box<expression::ExprPrime>)>) -> Result<f64, CalculatorErr> {
         let mut value: f64 = self.evaluate_expr_prime(first_child)?;
 
         for (operator, sibling_expr) in siblings {
@@ -433,7 +432,7 @@ impl Interpreter {
         Ok(value)
     }
 
-    fn evaluate_binary_infix_function_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::IdToken, Box<expression::ExprPrime>)>) -> Result<f64, InterpreterErr> {
+    fn evaluate_binary_infix_function_expression(&self, first_child: expression::ExprPrime, siblings: Vec<(expression::IdToken, Box<expression::ExprPrime>)>) -> Result<f64, CalculatorErr> {
         let mut value: f64 = self.evaluate_expr_prime(first_child)?;
 
         for (binfunc, sibling_expr) in siblings {
