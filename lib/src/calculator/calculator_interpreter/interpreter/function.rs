@@ -1,19 +1,19 @@
 pub mod function_impl;
 pub mod function_lazy_static;
 
-use super::interpreter_err::InterpreterErr;
+use crate::calculator::CalculatorErr;
 
-pub type Func0 = fn () -> Result<f64, InterpreterErr>;
-pub type Func1 = fn (f64) -> Result<f64, InterpreterErr>;
-pub type Func2 = fn (f64, f64) -> Result<f64, InterpreterErr>;
-pub type Func3 = fn (f64, f64, f64) -> Result<f64, InterpreterErr>;
-pub type Func4 = fn (f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
-pub type Func5 = fn (f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
-pub type Func6 = fn (f64, f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
-pub type Func7 = fn (f64, f64, f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
-pub type Func8 = fn (f64, f64, f64, f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
-pub type Func9 = fn (f64, f64, f64, f64, f64, f64, f64, f64, f64) -> Result<f64, InterpreterErr>;
-pub type FuncVar = fn (Vec<f64>) -> Result<f64, InterpreterErr>;
+pub type Func0 = fn () -> Result<f64, CalculatorErr>;
+pub type Func1 = fn (f64) -> Result<f64, CalculatorErr>;
+pub type Func2 = fn (f64, f64) -> Result<f64, CalculatorErr>;
+pub type Func3 = fn (f64, f64, f64) -> Result<f64, CalculatorErr>;
+pub type Func4 = fn (f64, f64, f64, f64) -> Result<f64, CalculatorErr>;
+pub type Func5 = fn (f64, f64, f64, f64, f64) -> Result<f64, CalculatorErr>;
+pub type Func6 = fn (f64, f64, f64, f64, f64, f64) -> Result<f64, CalculatorErr>;
+pub type Func7 = fn (f64, f64, f64, f64, f64, f64, f64) -> Result<f64, CalculatorErr>;
+pub type Func8 = fn (f64, f64, f64, f64, f64, f64, f64, f64) -> Result<f64, CalculatorErr>;
+pub type Func9 = fn (f64, f64, f64, f64, f64, f64, f64, f64, f64) -> Result<f64, CalculatorErr>;
+pub type FuncVar = fn (Vec<f64>) -> Result<f64, CalculatorErr>;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum FunctionArgs {
