@@ -702,7 +702,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('gui-f91b7bb8849b289b_bg.wasm', import.meta.url);
+        input = new URL('gui-554d0e4db7b4d3b1_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
