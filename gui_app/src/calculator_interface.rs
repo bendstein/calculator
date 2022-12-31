@@ -1,6 +1,6 @@
 use std::ops::RangeBounds;
 
-use crate::yew_app;
+use yew::prelude::*;
 
 use super::calculator::{*, calculator_parser, calculator_interpreter::interpreter::EvaluateOptions as InterpreterOptions, calculator_err::CalculatorErr};
 
@@ -50,7 +50,7 @@ impl Default for GraphicalUI {
 
 impl GraphicalUI {
     pub fn start(&mut self) -> Result<(), String> {
-        yew_app::run();
+        yew::Renderer::<CalculatorApp>::new().render();
         Ok(())
     }
 
@@ -236,5 +236,84 @@ impl GraphicalUI {
             }
             CalculatorAction::Submit => self.evaluate_buffer(),
         }
+    }
+}
+
+#[derive(Properties, PartialEq, Default)]
+struct UIContext {
+    pub state: CalculatorState,
+    pub result: CalculatorResult
+}
+
+#[derive(PartialEq, Default)]
+struct CalculatorUIState {
+    pub buffer: AttrValue,
+    pub preview: AttrValue,
+    pub calculator_state: CalculatorState
+}
+
+#[function_component]
+fn CalculatorApp(_context: &UIContext) -> Html {
+    // let onclick = {
+    //     let counter = counter.clone();
+    //     move |_| {
+    //         let value = *counter + 1;
+    //         counter.set(value);
+    //     }
+    // };
+
+    // html! {
+    //     <div>
+    //         <button {onclick}>{ "+1" }</button>
+    //         <p></p>
+    //     </div>
+    // }
+
+    html! {
+        <>
+            <div id="calculator" class="calculator">
+                <div class="calculator-screen">
+                    <div class="calculator-screen-inner">
+                        <div id="buffer">{ "15 + 6" }</div>
+                        <div id="preview">{ "= 21" }</div>
+                        <div class="history">{ "14" }</div>
+                        <div class="history">{ "5" }</div>
+                        <div class="history">{ "512" }</div>
+                    </div>
+                </div>
+                <table class="calculator-buttons">
+                    <tr>
+                        <td><button>{ "CE" }</button></td>
+                        <td><button>{ "C" }</button></td>
+                        <td><button>{ "^" }</button></td>
+                        <td><button>{ "/" }</button></td>
+                    </tr>
+                    <tr>
+                        <td><button>{ "7" }</button></td>
+                        <td><button>{ "8" }</button></td>
+                        <td><button>{ "9" }</button></td>
+                        <td><button>{ "x" }</button></td>
+                    </tr>
+                    <tr>
+                        <td><button>{ "4" }</button></td>
+                        <td><button>{ "5" }</button></td>
+                        <td><button>{ "6" }</button></td>
+                        <td><button>{ "-" }</button></td>
+                    </tr>
+                    <tr>
+                        <td><button>{ "1" }</button></td>
+                        <td><button>{ "2" }</button></td>
+                        <td><button>{ "3" }</button></td>
+                        <td><button>{ "+" }</button></td>
+                    </tr>
+                    <tr>
+                        <td><button>{ "0" }</button></td>
+                        <td><button>{ "." }</button></td>
+                        <td><button>{ "%" }</button></td>
+                        <td><button>{ "=" }</button></td>
+                    </tr>
+                </table>
+            </div>   
+        </>
     }
 }
