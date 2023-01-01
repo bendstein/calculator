@@ -8,6 +8,9 @@ fn main() {
     //Create the calculator
     let calculator = calculator::Calculator::default();
     
+    //Initialize WASM logging
+    wasm_logger::init(wasm_logger::Config::default());
+
     //Create the UI instance
     let mut ui = calculator_interface::GraphicalUI::new(calculator);
     

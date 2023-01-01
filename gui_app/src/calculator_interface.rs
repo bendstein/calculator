@@ -1,6 +1,7 @@
 use std::ops::RangeBounds;
-
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
+use web_sys::HtmlElement;
 
 use super::calculator::{*, calculator_parser, calculator_interpreter::interpreter::EvaluateOptions as InterpreterOptions, calculator_err::CalculatorErr};
 
@@ -9,7 +10,9 @@ pub enum CalculatorAction {
     #[default] None,
     Insert(String, bool),
     Backspace(bool),
-    Clear,
+    ClearEntry,
+    ClearHistory,
+    ClearMemory,
     Submit
 }
 
@@ -230,10 +233,18 @@ impl GraphicalUI {
                     Ok(CalculatorResult::None)
                 }
             },
-            CalculatorAction::Clear => {
+            CalculatorAction::ClearEntry => {
                 self.buffer_clear();
                 Ok(CalculatorResult::RefreshDisplay)
-            }
+            },
+            CalculatorAction::ClearHistory => {
+                self.calculator.clear_stack();
+                Ok(CalculatorResult::RefreshDisplay)
+            },
+            CalculatorAction::ClearMemory => {
+                self.calculator.clear_mem();
+                Ok(CalculatorResult::RefreshDisplay)
+            },
             CalculatorAction::Submit => self.evaluate_buffer(),
         }
     }
@@ -254,20 +265,40 @@ struct CalculatorUIState {
 
 #[function_component]
 fn CalculatorApp(_context: &UIContext) -> Html {
-    // let onclick = {
-    //     let counter = counter.clone();
-    //     move |_| {
-    //         let value = *counter + 1;
-    //         counter.set(value);
-    //     }
-    // };
+    let onclick = {
 
-    // html! {
-    //     <div>
-    //         <button {onclick}>{ "+1" }</button>
-    //         <p></p>
-    //     </div>
-    // }
+        move |e: MouseEvent| {
+            let actions: Vec<CalculatorAction> = if let Some(target) = e.target() {
+                if let Ok(element) = target.dyn_into::<HtmlElement>() {
+                    if element.has_attribute("data-clear") {
+                        log::info!("Clear");
+                        vec![CalculatorAction::ClearEntry, CalculatorAction::ClearHistory, CalculatorAction::ClearMemory]
+                    }
+                    else if element.has_attribute("data-clear-entry") {
+                        log::info!("Clear Entry");
+                        vec![CalculatorAction::ClearEntry]
+                    }
+                    else if element.has_attribute("data-submit") {
+                        log::info!("Submit");
+                        vec![CalculatorAction::Submit]
+                    }
+                    else if let Some(data_append) = element.get_attribute("data-append") {
+                        log::info!("{data_append}");
+                        vec![CalculatorAction::Insert(data_append, true)]
+                    }
+                    else {
+                        vec![CalculatorAction::None]
+                    }
+                }
+                else {
+                    vec![CalculatorAction::None]
+                }
+            }
+            else {
+                vec![CalculatorAction::None]
+            };
+        }
+    };
 
     html! {
         <>
@@ -283,34 +314,34 @@ fn CalculatorApp(_context: &UIContext) -> Html {
                 </div>
                 <table class="calculator-buttons">
                     <tr>
-                        <td><button>{ "CE" }</button></td>
-                        <td><button>{ "C" }</button></td>
-                        <td><button>{ "^" }</button></td>
-                        <td><button>{ "/" }</button></td>
+                        <td><button {onclick} data-clear="">{ "CE" }</button></td>
+                        <td><button {onclick} data-clear-entry="">{ "C" }</button></td>
+                        <td><button {onclick} data-append="^">{ "^" }</button></td>
+                        <td><button {onclick} data-append="/">{ "/" }</button></td>
                     </tr>
                     <tr>
-                        <td><button>{ "7" }</button></td>
-                        <td><button>{ "8" }</button></td>
-                        <td><button>{ "9" }</button></td>
-                        <td><button>{ "x" }</button></td>
+                        <td><button {onclick} data-append="7">{ "7" }</button></td>
+                        <td><button {onclick} data-append="8">{ "8" }</button></td>
+                        <td><button {onclick} data-append="9">{ "9" }</button></td>
+                        <td><button {onclick} data-append="*">{ "x" }</button></td>
                     </tr>
                     <tr>
-                        <td><button>{ "4" }</button></td>
-                        <td><button>{ "5" }</button></td>
-                        <td><button>{ "6" }</button></td>
-                        <td><button>{ "-" }</button></td>
+                        <td><button {onclick} data-append="4">{ "4" }</button></td>
+                        <td><button {onclick} data-append="5">{ "5" }</button></td>
+                        <td><button {onclick} data-append="6">{ "6" }</button></td>
+                        <td><button {onclick} data-append="-">{ "-" }</button></td>
                     </tr>
                     <tr>
-                        <td><button>{ "1" }</button></td>
-                        <td><button>{ "2" }</button></td>
-                        <td><button>{ "3" }</button></td>
-                        <td><button>{ "+" }</button></td>
+                        <td><button {onclick} data-append="1">{ "1" }</button></td>
+                        <td><button {onclick} data-append="2">{ "2" }</button></td>
+                        <td><button {onclick} data-append="3">{ "3" }</button></td>
+                        <td><button {onclick} data-append="+">{ "+" }</button></td>
                     </tr>
                     <tr>
-                        <td><button>{ "0" }</button></td>
-                        <td><button>{ "." }</button></td>
-                        <td><button>{ "%" }</button></td>
-                        <td><button>{ "=" }</button></td>
+                        <td><button {onclick} data-append="0">{ "0" }</button></td>
+                        <td><button {onclick} data-append=".">{ "." }</button></td>
+                        <td><button {onclick} data-append="%">{ "%" }</button></td>
+                        <td><button {onclick} data-submit="">{ "=" }</button></td>
                     </tr>
                 </table>
             </div>   
