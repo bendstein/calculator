@@ -317,7 +317,7 @@ fn CalculatorApp(_context: &UIContext) -> Html {
                         <td><button {onclick} data-clear="">{ "CE" }</button></td>
                         <td><button {onclick} data-clear-entry="">{ "C" }</button></td>
                         <td><button {onclick} data-append="^">{ "^" }</button></td>
-                        <td><button {onclick} data-append="/">{ "/" }</button></td>
+                        <td><button {onclick} data-append="/">{ "÷" }</button></td>
                     </tr>
                     <tr>
                         <td><button {onclick} data-append="7">{ "7" }</button></td>
