@@ -1,18 +1,24 @@
 use std::ops::RangeBounds;
-use wasm_bindgen::JsCast;
 use yew::prelude::*;
-use web_sys::HtmlElement;
+use bitflags::bitflags;
 
 use super::calculator::{*, calculator_parser, calculator_interpreter::interpreter::EvaluateOptions as InterpreterOptions, calculator_err::CalculatorErr};
 
+bitflags! {
+    pub struct ClearType: u32 {
+        const ENTRY = 0b00000001;
+        const HISTORY = 0b00000010;
+        const MEMORY = 0b00000100;
+    }
+}
+
+#[allow(dead_code)]
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub enum CalculatorAction {
     #[default] None,
     Insert(String, bool),
     Backspace(bool),
-    ClearEntry,
-    ClearHistory,
-    ClearMemory,
+    Clear(ClearType),
     Submit
 }
 
@@ -27,38 +33,92 @@ pub enum CalculatorResult {
     PreviewNumberAndState(Result<(f64, CalculatorState), CalculatorErr>)
 }
 
-#[derive(Debug, Clone)]
-pub struct GraphicalUI 
-{ 
-    calculator: Calculator,
-    buffer: String,
-    cursor: usize
+#[derive(Properties, Default, Debug, PartialEq, Clone)]
+pub struct CalculatorButton {
+    callback_click: Option<Callback<()>>,
+    display: AttrValue
 }
 
-impl GraphicalUI {
-    pub fn new(calculator: Calculator) -> Self {
+impl Component for CalculatorButton {
+    type Message = ();
+    type Properties = CalculatorButton;
+
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            calculator,
-            buffer: String::from(""),
-            cursor: 0
+            callback_click: ctx.props().callback_click.clone(),
+            display: ctx.props().display.clone()
+        }
+    }
+
+    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
+        log::info!("InnerUpdate");
+
+        if let Some(ref mut callback) = self.callback_click {
+            log::info!("Emit");
+            callback.emit(());
+            true
+        }
+        else {
+            false
+        }
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {       
+        let onclick = ctx.link().callback(move |_: MouseEvent| {
+            log::debug!("Click");
+        });
+
+        html! {
+            <button {onclick}>{ &self.display }</button>
         }
     }
 }
 
-impl Default for GraphicalUI {
-    fn default() -> Self {
-        Self::new(Calculator::default())
-    }
+#[derive(Properties, Default, Debug, PartialEq, Clone)]
+pub struct CalculatorBase {
+    calculator: Calculator,
+    buffer: String,
+    cursor: usize,
+    result: Option<f64>,
+    preview: Option<Result<(f64, CalculatorState), CalculatorErr>>
 }
 
-impl GraphicalUI {
-    pub fn start(&mut self) -> Result<(), String> {
-        yew::Renderer::<CalculatorApp>::new().render();
-        Ok(())
-    }
-
+impl CalculatorBase {
     fn buffer_append(&mut self, content: &str) {
         self.buffer.push_str(content);
+    }
+
+    fn buffer_insert_at_cursor(&mut self, content: &str) {
+        if self.cursor == self.buffer.len() {
+            if !content.is_empty() {
+                self.buffer_append(content);
+                self.cursor += content.len();
+            }
+        }
+        else if content.is_empty() {
+            self.buffer.remove(self.cursor);
+            if self.cursor > self.buffer.len() {
+                self.cursor = self.buffer.len();
+            }
+        }
+        else {
+            let before: &str = if self.cursor == 0_usize {
+                ""
+            }
+            else {
+                &self.buffer[0..self.cursor]
+            };
+
+            let after: &str = if self.cursor + content.len() >= self.buffer.len() {
+                ""
+            }
+            else {
+                &self.buffer[self.cursor + content.len() + 1..self.buffer.len()]
+            };
+
+            self.buffer = format!("{before}{content}{after}");
+            self.cursor = self.cursor + content.len() + 1;
+        }
     }
 
     fn buffer_clear(&mut self) {
@@ -122,53 +182,40 @@ impl GraphicalUI {
         CalculatorResult::PreviewNumberAndState(self.calculator
             .evaluate_with_options(&self.buffer, EvaluateOptions::new(InterpreterOptions::new(true))))
     }
+}
 
-    fn insert_at_cursor(&mut self, content: &str) {
-        if self.cursor == self.buffer.len() {
-            if !content.is_empty() {
-                self.buffer_append(content);
-                self.cursor += content.len();
-            }
-        }
-        else if content.is_empty() {
-            self.buffer.remove(self.cursor);
-            if self.cursor > self.buffer.len() {
-                self.cursor = self.buffer.len();
-            }
-        }
-        else {
-            let before: &str = if self.cursor == 0_usize {
-                ""
-            }
-            else {
-                &self.buffer[0..self.cursor]
-            };
+impl Component for CalculatorBase {
+    type Message = CalculatorAction;
+    type Properties = CalculatorBase;
 
-            let after: &str = if self.cursor + content.len() >= self.buffer.len() {
-                ""
-            }
-            else {
-                &self.buffer[self.cursor + content.len() + 1..self.buffer.len()]
-            };
-
-            self.buffer = format!("{before}{content}{after}");
-            self.cursor = self.cursor + content.len() + 1;
+    fn create(ctx: &Context<Self>) -> Self {
+        Self {
+            calculator: ctx.props().calculator.clone(),
+            buffer: ctx.props().buffer.clone(),
+            cursor: ctx.props().cursor,
+            result: ctx.props().result,
+            preview: ctx.props().preview.clone()
         }
     }
+    
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+        log::info!("Update; Buffer: {}; Cursor: {}", &self.buffer, self.cursor);
+        log::debug!("{msg:?}");
 
-    pub fn do_action(&mut self, action: CalculatorAction) -> Result<CalculatorResult, calculator_err::CalculatorErr> {
-        match action {
-            CalculatorAction::None => Ok(CalculatorResult::None),
-            CalculatorAction::Insert(content, preview) => {
-                let mut new_content = content;
+        let result = match msg {
+            CalculatorAction::None => CalculatorResult::None,
+            CalculatorAction::Insert(symbol, _preview) => {
+                log::info!("Insert '{symbol}'; preview: {}", _preview);
+
+                let mut new_content = symbol;
                 
                 let parser = self.calculator.parser();
                 let interpreter = self.calculator.interpreter();
 
                 /*
-                    * If buffer is empty, and history is not, and content is an infix or suffix operator,
-                    * prepend with $0.
-                    */
+                 * If buffer is empty, and history is not, and content is an infix or suffix operator,
+                 * prepend with $0.
+                 */
                 if self.buffer.is_empty() && self.calculator.has_history()
                     && parser.parse_expression::<calculator_parser::expression::UnopPrefix>(new_content.as_str()).is_err() {
                     if parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() {
@@ -186,18 +233,18 @@ impl GraphicalUI {
                     }
                 }
                 /*
-                    * If buffer isn't empty, and appending to end of buffer, and content is an infix operator,
-                    * surround operator with spaces
-                    */
+                 * If buffer isn't empty, and appending to end of buffer, and content is an infix operator,
+                 * surround operator with spaces
+                 */
                 else if !self.buffer.is_empty() && self.cursor == self.buffer.len() 
                     && (parser.parse_expression::<calculator_parser::expression::BinopInfix>(new_content.as_str()).is_ok() 
                         || parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()).is_ok()) {
                     new_content = format!("{}{new_content} ", if self.buffer.ends_with(' ') { "" } else { " " });
                 }
                 /*
-                    * If buffer isn't empty, and appending to end of buffer, and content is a suffix operator,
-                    * put a space after it, and remove any spaces before it
-                    */
+                 * If buffer isn't empty, and appending to end of buffer, and content is a suffix operator,
+                 * put a space after it, and remove any spaces before it
+                 */
                 else if !self.buffer.is_empty() && self.cursor == self.buffer.len() 
                     && parser.parse_expression::<calculator_parser::expression::UnopSuffix>(new_content.as_str()).is_ok() {
                         if self.buffer.ends_with(' ') {
@@ -208,143 +255,199 @@ impl GraphicalUI {
                         new_content = format!("{new_content} ");
                     }
 
-                self.insert_at_cursor(new_content.as_str());
+                self.buffer_insert_at_cursor(&new_content);
 
-                if preview {
-                    Ok(self.evaluate_buffer_preview())
+                log::info!("Buffer: {}; Cursor: {}", &self.buffer, self.cursor);
+                
+                if _preview {
+                    self.evaluate_buffer_preview()
                 }
                 else {
-                    Ok(CalculatorResult::RefreshDisplay)
+                    CalculatorResult::RefreshDisplay
                 }
             },
-            CalculatorAction::Backspace(preview) => {
-                if self.cursor > 0 {
-                    self.buffer_remove_end(1_usize, true);
-                    self.cursor = self.cursor.min(self.buffer.len());
-
-                    if preview {
-                        Ok(self.evaluate_buffer_preview())
-                    }
-                    else {
-                        Ok(CalculatorResult::RefreshDisplay)
-                    }
+            CalculatorAction::Backspace(_preview) => {
+                log::info!("Backspace; preview: {}", _preview);
+                self.buffer_remove_end(1, true);
+                
+                if _preview {
+                    self.evaluate_buffer_preview()
                 }
                 else {
-                    Ok(CalculatorResult::None)
+                    CalculatorResult::RefreshDisplay
                 }
             },
-            CalculatorAction::ClearEntry => {
-                self.buffer_clear();
-                Ok(CalculatorResult::RefreshDisplay)
-            },
-            CalculatorAction::ClearHistory => {
-                self.calculator.clear_stack();
-                Ok(CalculatorResult::RefreshDisplay)
-            },
-            CalculatorAction::ClearMemory => {
-                self.calculator.clear_mem();
-                Ok(CalculatorResult::RefreshDisplay)
-            },
-            CalculatorAction::Submit => self.evaluate_buffer(),
-        }
-    }
-}
+            CalculatorAction::Clear(clear_type) => {
+                log::info!("Clear; {}", clear_type.bits);
 
-#[derive(Properties, PartialEq, Default)]
-struct UIContext {
-    pub state: CalculatorState,
-    pub result: CalculatorResult
-}
-
-#[derive(PartialEq, Default)]
-struct CalculatorUIState {
-    pub buffer: AttrValue,
-    pub preview: AttrValue,
-    pub calculator_state: CalculatorState
-}
-
-#[function_component]
-fn CalculatorApp(_context: &UIContext) -> Html {
-    let onclick = {
-
-        move |e: MouseEvent| {
-            let actions: Vec<CalculatorAction> = if let Some(target) = e.target() {
-                if let Ok(element) = target.dyn_into::<HtmlElement>() {
-                    if element.has_attribute("data-clear") {
-                        log::info!("Clear");
-                        vec![CalculatorAction::ClearEntry, CalculatorAction::ClearHistory, CalculatorAction::ClearMemory]
-                    }
-                    else if element.has_attribute("data-clear-entry") {
-                        log::info!("Clear Entry");
-                        vec![CalculatorAction::ClearEntry]
-                    }
-                    else if element.has_attribute("data-submit") {
-                        log::info!("Submit");
-                        vec![CalculatorAction::Submit]
-                    }
-                    else if let Some(data_append) = element.get_attribute("data-append") {
-                        log::info!("{data_append}");
-                        vec![CalculatorAction::Insert(data_append, true)]
-                    }
-                    else {
-                        vec![CalculatorAction::None]
-                    }
+                if clear_type.contains(ClearType::ENTRY) {
+                    log::info!("Clearing buffer.");
+                    self.buffer_clear();
                 }
-                else {
-                    vec![CalculatorAction::None]
+
+                if clear_type.contains(ClearType::HISTORY) {
+                    log::info!("Clearing history.");
+                    self.calculator.clear_stack();
+                }
+
+                if clear_type.contains(ClearType::MEMORY) {
+                    log::info!("Clearing memory.");
+                    self.calculator.clear_mem();
+                }
+
+                CalculatorResult::RefreshDisplay
+            },
+            CalculatorAction::Submit => {
+                log::info!("Submit");
+                let result = self.evaluate_buffer();
+
+                match result {
+                    Ok(evaluated) => {
+                        evaluated
+                    },
+                    Err(err) => {
+                        log::error!("{err}");
+                        CalculatorResult::RefreshDisplay
+                    }
                 }
             }
-            else {
-                vec![CalculatorAction::None]
-            };
-        }
-    };
+        };
 
-    html! {
-        <>
-            <div id="calculator" class="calculator">
-                <div class="calculator-screen">
-                    <div class="calculator-screen-inner">
-                        <div id="buffer">{ "15 + 6" }</div>
-                        <div id="preview">{ "= 21" }</div>
-                        <div class="history">{ "14" }</div>
-                        <div class="history">{ "5" }</div>
-                        <div class="history">{ "512" }</div>
+        let rerender = match result {
+            CalculatorResult::None => {
+                log::info!("None");
+                false
+            },
+            CalculatorResult::RefreshDisplay => {
+                log::info!("Refresh Display");
+                self.result = None;
+                self.preview = None;
+                true
+            },
+            CalculatorResult::Number(n) => {
+                log::info!("Number ({n}).");
+                self.result = Some(n);
+                self.preview = None;
+                self.buffer_clear();
+                true
+            },
+            CalculatorResult::State(_state) => {
+                log::info!("State");
+                true
+            },
+            CalculatorResult::NumberAndState(n, _state) => {
+                log::info!("Number ({n}) And State");
+                self.result = Some(n);
+                self.preview = None;
+                self.buffer_clear();
+                true
+            },
+            CalculatorResult::PreviewNumberAndState(preview) => {
+                self.preview = Some(preview.clone());
+                self.result = None;
+
+                match preview {
+                    Ok((n, _state)) => {
+                        log::info!("Preview Number ({n}) And State");
+                    },
+                    Err(e) => {
+                        log::warn!("Preview Number And State: Error: {e}");
+                    },
+                };
+
+                true
+            },
+        };
+
+        log::debug!("Debug: {self:#?}");
+
+        rerender
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let buffer = if self.buffer.is_empty() {
+            self.result.as_ref().map(|n| n.to_string())
+        }
+        else {
+            Some(self.buffer.clone())
+        };
+        
+        let preview = match &self.preview {
+            None => None,
+            Some(result) => {
+                let (content, class) = match result {
+                    Ok((n, _)) => (n.to_string(), None),
+                    Err(e) => (e.to_string(), Some("error"))
+                };
+
+                let content_truncated = if content.len() > 10 {
+                    let truncated = &content[0..10];
+                    format!("{truncated}...")
+                }
+                else {
+                    content.clone()
+                };
+
+                Some(html! {
+                    <span title={content} class={class}>{ content_truncated }</span>
+                })
+            }
+        };
+
+        let calculator_state = self.calculator.clone_current_state();
+        let history = calculator_state.history;
+
+        let history_rows = history.iter().rev().map(|n| {
+            //format!("<div class=\"history\">= {n}</div>")
+            html! {
+                <div class="history">{"= "}{n}</div>
+            }
+        });
+
+        html! {
+            <>
+                <div id="calculator" class="calculator">
+                    <div class="calculator-screen">
+                        <div class="calculator-screen-inner">
+                            <div id="buffer">{ buffer }</div>
+                            <div id="preview">{ preview }</div>
+                            { for history_rows }
+                        </div>
                     </div>
-                </div>
-                <table class="calculator-buttons">
-                    <tr>
-                        <td><button {onclick} data-clear="">{ "CE" }</button></td>
-                        <td><button {onclick} data-clear-entry="">{ "C" }</button></td>
-                        <td><button {onclick} data-append="^">{ "^" }</button></td>
-                        <td><button {onclick} data-append="/">{ "÷" }</button></td>
-                    </tr>
-                    <tr>
-                        <td><button {onclick} data-append="7">{ "7" }</button></td>
-                        <td><button {onclick} data-append="8">{ "8" }</button></td>
-                        <td><button {onclick} data-append="9">{ "9" }</button></td>
-                        <td><button {onclick} data-append="*">{ "x" }</button></td>
-                    </tr>
-                    <tr>
-                        <td><button {onclick} data-append="4">{ "4" }</button></td>
-                        <td><button {onclick} data-append="5">{ "5" }</button></td>
-                        <td><button {onclick} data-append="6">{ "6" }</button></td>
-                        <td><button {onclick} data-append="-">{ "-" }</button></td>
-                    </tr>
-                    <tr>
-                        <td><button {onclick} data-append="1">{ "1" }</button></td>
-                        <td><button {onclick} data-append="2">{ "2" }</button></td>
-                        <td><button {onclick} data-append="3">{ "3" }</button></td>
-                        <td><button {onclick} data-append="+">{ "+" }</button></td>
-                    </tr>
-                    <tr>
-                        <td><button {onclick} data-append="0">{ "0" }</button></td>
-                        <td><button {onclick} data-append=".">{ "." }</button></td>
-                        <td><button {onclick} data-append="%">{ "%" }</button></td>
-                        <td><button {onclick} data-submit="">{ "=" }</button></td>
-                    </tr>
-                </table>
-            </div>   
-        </>
+                    <table class="calculator-buttons">
+                         <tr>
+                            <td><CalculatorButton display="CE" callback_click={ctx.link().callback(move |_| CalculatorAction::Clear(ClearType::ENTRY))} /></td>
+                            <td><CalculatorButton display="C" callback_click={ctx.link().callback(move |_| CalculatorAction::Clear(ClearType::all()))} /></td>
+                            <td><CalculatorButton display="^" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("^"), true))} /></td>
+                            <td><CalculatorButton display="%" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("%"), true))} /></td>
+                         </tr>
+                        <tr>
+                            <td><CalculatorButton display="7" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("7"), true))} /></td>
+                            <td><CalculatorButton display="8" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("8"), true))} /></td>
+                            <td><CalculatorButton display="9" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("9"), true))} /></td>
+                            <td><CalculatorButton display="*" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("*"), true))} /></td>
+                        </tr>
+                        <tr>
+                            <td><CalculatorButton display="4" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("4"), true))} /></td>
+                            <td><CalculatorButton display="5" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("5"), true))} /></td>
+                            <td><CalculatorButton display="6" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("6"), true))} /></td>
+                            <td><CalculatorButton display="-" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("-"), true))} /></td>
+                        </tr>
+                        <tr>
+                            <td><CalculatorButton display="1" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("1"), true))} /></td>
+                            <td><CalculatorButton display="2" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("2"), true))} /></td>
+                            <td><CalculatorButton display="3" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("3"), true))} /></td>
+                            <td><CalculatorButton display="+" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("+"), true))} /></td>
+                        </tr>
+                        <tr>
+                            <td><CalculatorButton display="0" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("0"), true))} /></td>
+                            <td><CalculatorButton display="." callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("."), true))} /></td>
+                            <td><CalculatorButton display="/" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("/"), true))} /></td>
+                            <td><CalculatorButton display="=" callback_click={ctx.link().callback(move |_| CalculatorAction::Submit)} /></td>
+                        </tr>
+                    </table>
+                </div>   
+            </>
+        }
     }
 }

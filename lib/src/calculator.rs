@@ -43,17 +43,11 @@ impl CalculatorState {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Calculator 
 {
     interpreter: Interpreter,
     parser: Parser
-}
-
-impl Debug for Calculator {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.interpreter.fmt(f)
-    }
 }
 
 impl Calculator {
@@ -113,11 +107,5 @@ impl Calculator {
 
     fn prepare_string(expression: &str) -> &str {
         expression.trim()
-    }
-}
-
-impl Default for Calculator {
-    fn default() -> Self {
-        Self::new(Interpreter::default(), Parser::default())
     }
 }

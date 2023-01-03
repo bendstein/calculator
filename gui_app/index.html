@@ -7,6 +7,7 @@
             :root {
                 --screen-height: 3rem;
                 --calculator-width: 120px;
+                --screen-line-height: 1em;
             }
 
             .calculator {
@@ -40,6 +41,12 @@
                         padding: 0 2px;
                     }
 
+                    .calculator .calculator-screen .calculator-screen-inner > * {
+                        line-height: var(--screen-line-height);
+                        min-height: var(--screen-line-height);
+                        font-size: var(--screen-line-height);
+                    }
+
                     .calculator .calculator-screen .calculator-screen-inner #preview {
                         opacity: 0.66;
                     }
@@ -50,8 +57,8 @@
 
                     .calculator .calculator-screen .calculator-screen-inner .history {
                         font-style: italic;
-                        font-size: 0.5rem;
-                        line-height: 0.75rem;
+                        font-size: 0.8em;
+                        min-height: 1.2em;
                     }
 
                 .calculator .calculator-buttons {
