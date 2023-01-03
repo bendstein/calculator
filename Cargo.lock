@@ -534,6 +534,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "desktop"
+version = "0.4.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2685,16 +2695,6 @@ dependencies = [
  "filetime",
  "libc",
  "xattr",
-]
-
-[[package]]
-name = "tauri"
-version = "0.4.0"
-dependencies = [
- "serde",
- "serde_json",
- "tauri 1.2.3",
- "tauri-build",
 ]
 
 [[package]]

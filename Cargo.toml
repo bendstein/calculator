@@ -2,8 +2,8 @@
 members = [
     "lib",
     "console_app",
-    "gui_app",
-    "tauri_app"
+    "wasm_app",
+    "desktop_app"
 ]
 
 [workspace.package]

@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"command": "Start-Process 'http://127.0.0.1:8080'; cd gui_app; trunk serve;",
+			"command": "Start-Process 'http://127.0.0.1:8080'; cd wasm_app; trunk serve;",
 			"group": "build",
 			"label": "rust: trunk serve"
 		}
