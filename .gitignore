@@ -3,3 +3,4 @@
 *.code-workspace
 .vscode/launch.json
 gui_app/dist/
+wasm_app/dist/

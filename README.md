@@ -1,16 +1,17 @@
 A calculator made in rust.
 
-To start in GUI mode, run the executable 'gui.exe'.
-
 To start in Console mode, run the executable 'console.exe'.
 
 ### GUI mode
 ---
-WIP
+The calculator GUI was made using yew + web assembly, and can be run as a desktop app using tauri.
 
 ### Console mode
 ---
-Can be executed through the terminal starting a loop allowing the user to enter an expression, and printing the evaluated result.
+Will evaluate expressions entered as arguments, and output each result on a new line. Alternatively, can accept input that is piped in.
+
+#### Interactive Mode:
+If executed through console, with no input piped in, and no arguments, will start in interactive mode, starting a loop allowing the user to enter an expression, and printing the evaluated result.
 
 Additionally:
  - Entering ':exit', the loop will break and the program will exit.
@@ -150,5 +151,14 @@ This calculator has several built-in functions.
 ### TODO:
 ----
   - ~~Report error reasons during parsing.~~ (Done)
-  - Implement GUI?
-    - Using wasm via yew (https://yew.rs/docs/getting-started/introduction)
+  - ~~Implement GUI?~~
+    - ~~Using wasm via yew (https://yew.rs/docs/getting-started/introduction)~~
+  - Improve GUI look
+    - Backspace
+    - Arrow keys to change position in input buffer
+    - Allow using keyboard
+  - Add more of the calculator's functionality to the GUI
+    - Calculator memory
+    - Functions
+    - Include calculator history in expression
+    - Parentheses

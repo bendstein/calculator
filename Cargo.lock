@@ -207,7 +207,7 @@ dependencies = [
 
 [[package]]
 name = "calculator"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "lazy_static",
  "rand 0.8.5",
@@ -331,7 +331,7 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "atty",
  "calculator",
@@ -535,7 +535,7 @@ dependencies = [
 
 [[package]]
 name = "desktop"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -1240,7 +1240,7 @@ dependencies = [
 
 [[package]]
 name = "gui"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bitflags",
  "calculator",
