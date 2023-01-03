@@ -3,76 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <title>Calculator</title>
-        <style>
-            :root {
-                --screen-height: 3rem;
-                --calculator-width: 120px;
-                --screen-line-height: 1em;
-            }
-
-            .calculator {
-                width: fit-content;
-                border: 0.75px solid #828282;
-                border-radius: 4px;
-                padding: 2px;
-                background-color: #d0d0d0;
-            }
-
-                .calculator .calculator-screen {
-                    height: var(--screen-height);
-                    display: flex;
-                    flex-direction: column;
-                    background-color: #2d2d2d;
-                    border-radius: 2px;
-                    margin: 3px 1px;
-                    color: white;
-                    font-family: 'Courier New', Courier, monospace;
-                    font-size: 0.66rem;
-                    overflow: hidden;
-                }
-                
-                    .calculator .calculator-screen .calculator-screen-inner {
-                        min-height: var(--screen-height);
-                        display: flex;
-                        flex-direction: column-reverse;
-                        text-align: end;
-                        overflow: hidden auto;
-                        scrollbar-gutter: stable;
-                        padding: 0 2px;
-                    }
-
-                    .calculator .calculator-screen .calculator-screen-inner > * {
-                        line-height: var(--screen-line-height);
-                        min-height: var(--screen-line-height);
-                        font-size: var(--screen-line-height);
-                    }
-
-                    .calculator .calculator-screen .calculator-screen-inner #preview {
-                        opacity: 0.66;
-                    }
-
-                        .calculator .calculator-screen .calculator-screen-inner #preview.error {
-                            color: #f03030;
-                        }
-
-                    .calculator .calculator-screen .calculator-screen-inner .history {
-                        font-style: italic;
-                        font-size: 0.8em;
-                        min-height: 1.2em;
-                    }
-
-                .calculator .calculator-buttons {
-                    table-layout: fixed;
-                    width: var(--calculator-width);
-                }
-
-                    .calculator .calculator-buttons button {
-                        width: 100%;
-                        border: 0.5px solid #828282;
-                        border-radius: 3px;
-                        color: #2b2b2b;
-                    }
-        </style>
+        <link data-trunk rel="css" href="content/style.css"/>
     </head>
     <body>
     </body>
