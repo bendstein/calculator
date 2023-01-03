@@ -1,7 +1,5 @@
 A calculator made in rust.
 
-To start in Console mode, run the executable 'console.exe'.
-
 ### GUI mode
 ---
 The calculator GUI was made using yew + web assembly, and can be run as a desktop app using tauri.
