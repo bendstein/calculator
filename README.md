@@ -151,12 +151,12 @@ This calculator has several built-in functions.
   - ~~Report error reasons during parsing.~~ (Done)
   - ~~Implement GUI?~~
     - ~~Using wasm via yew (https://yew.rs/docs/getting-started/introduction)~~
-  - Improve GUI look
-    - Backspace
+  - Improve GUI look/functionality
+    - ~~Backspace~~
     - Arrow keys to change position in input buffer
     - Allow using keyboard
   - Add more of the calculator's functionality to the GUI
     - Calculator memory
-    - Functions
+    - ~~Functions~~
     - Include calculator history in expression
-    - Parentheses
+    - ~~Parentheses~~
