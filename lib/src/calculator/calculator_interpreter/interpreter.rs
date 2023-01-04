@@ -45,6 +45,7 @@ impl Default for Interpreter {
                 ("MAX".to_string(), MAX.clone()),
                 ("MIN".to_string(), MIN.clone()),
                 ("MOD".to_string(), MOD.clone()),
+                ("ABS".to_string(), ABS.clone()),
                 ("CEIL".to_string(), CEIL.clone()),
                 ("FLOOR".to_string(), FLOOR.clone()),
                 ("ROUND".to_string(), ROUND.clone()),

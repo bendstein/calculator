@@ -15,6 +15,8 @@ lazy_static! {
     pub(in crate::calculator::calculator_interpreter) static ref NEG: Function = Function::new(FunctionArgs::One(|n: f64| Ok(-n)));
     pub(in crate::calculator::calculator_interpreter) static ref FAC: Function = Function::new(FunctionArgs::One(factorial));
     
+    pub(in crate::calculator::calculator_interpreter) static ref ABS: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::abs(n))));
+    
     pub(in crate::calculator::calculator_interpreter) static ref CEIL: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::ceil(n))));
     pub(in crate::calculator::calculator_interpreter) static ref FLOOR: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::floor(n))));
     pub(in crate::calculator::calculator_interpreter) static ref ROUND: Function = Function::new(FunctionArgs::One(|n: f64| Ok(f64::round(n))));
