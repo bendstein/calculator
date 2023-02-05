@@ -158,6 +158,6 @@ This calculator has several built-in functions.
     - Allow using keyboard
   - Add more of the calculator's functionality to the GUI
     - ~~Calculator memory~~
-    - ~~Functions~~
+    - Functions
     - ~~Include calculator history in expression~~
     - ~~Parentheses~~
