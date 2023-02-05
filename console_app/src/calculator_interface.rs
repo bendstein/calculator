@@ -4,6 +4,7 @@ use super::calculator;
 
 const EXIT_COMMAND: &str = ":exit";
 const CLEAR_COMMAND: &str = ":clear";
+const LIST_FUNCTIONS_COMMAND: &str = ":list-functions";
 const CLEAR_HISTORY_COMMAND: &str = ":clear-hist";
 const CLEAR_MEMORY_COMMAND: &str = ":clear-mem";
 
@@ -20,7 +21,7 @@ impl ConsoleUI {
     }
 
     pub fn start(&mut self) -> Result<(), String> {
-        println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, '{CLEAR_HISTORY_COMMAND}' to clear result history, '{CLEAR_MEMORY_COMMAND}' to clear calculator memory, or '{EXIT_COMMAND}' to exit.");
+        println!("Enter the expression to evaluate, '{CLEAR_COMMAND}' to clear the screen, '{CLEAR_HISTORY_COMMAND}' to clear result history, '{CLEAR_MEMORY_COMMAND}' to clear calculator memory, '{LIST_FUNCTIONS_COMMAND}' to print a list of valid functions, or '{EXIT_COMMAND}' to exit.");
 
         loop {
             print!("> ");
@@ -61,6 +62,11 @@ impl ConsoleUI {
             else if input.eq_ignore_ascii_case(CLEAR_MEMORY_COMMAND) {
                 self.calculator.clear_mem();
                 println!("Cleared calculator memory.");
+                continue;
+            }
+            else if input.eq_ignore_ascii_case(LIST_FUNCTIONS_COMMAND) {
+                self.calculator.interpreter().get_funcs().iter()
+                    .for_each(|(name, func)| println!("{name}{}", func.args));
                 continue;
             }
 

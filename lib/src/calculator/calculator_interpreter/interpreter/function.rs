@@ -1,6 +1,8 @@
 pub mod function_impl;
 pub mod function_lazy_static;
 
+use std::fmt::Display;
+
 use crate::calculator::CalculatorErr;
 
 pub type Func0 = fn () -> Result<f64, CalculatorErr>;
@@ -46,5 +48,25 @@ impl Function {
 impl Default for Function {
     fn default() -> Self {
         Self::new(FunctionArgs::None(|| Ok(0_f64)))
+    }
+}
+
+impl Display for FunctionArgs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let args = match self {
+            FunctionArgs::None(_) => "",
+            FunctionArgs::One(_) => "a",
+            FunctionArgs::Two(_) => "a, b",
+            FunctionArgs::Three(_) => "a, b, c",
+            FunctionArgs::Four(_) => "a, b, c, d",
+            FunctionArgs::Five(_) => "a, b, c, d, e",
+            FunctionArgs::Six(_) => "a, b, c, d, e, f",
+            FunctionArgs::Seven(_) => "a, b, c, d, e, f, g",
+            FunctionArgs::Eight(_) => "a, b, c, d, e, f, g, h",
+            FunctionArgs::Nine(_) => "a, b, c, d, e, f, g, h, i",
+            FunctionArgs::Variable(_) => "...n",
+        };
+
+        f.write_fmt(format_args!("({})", args))
     }
 }

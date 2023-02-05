@@ -146,6 +146,11 @@ impl Interpreter {
         matching.first().map(|func| func.1.clone())
     }
 
+    pub fn get_funcs(&self) -> Vec<(&String, &Function)> {
+        self.functions.iter()
+        .collect()
+    }
+
     /**
      * Evaluate the given expression with the given options
      */

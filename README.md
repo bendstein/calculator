@@ -16,6 +16,7 @@ Additionally:
  - Entering ':clear' will clear the screen. 
  - Entering ':clear-hist' will clear the calculator's history.
  - Entering ':clear-mem' will clear the calculator's memory.
+ - Entering ':list-functions' will print a list of the calculator's recognized functions.
 
 #### Accessing History:
 ----
@@ -156,7 +157,7 @@ This calculator has several built-in functions.
     - Arrow keys to change position in input buffer
     - Allow using keyboard
   - Add more of the calculator's functionality to the GUI
-    - Calculator memory
+    - ~~Calculator memory~~
     - ~~Functions~~
-    - Include calculator history in expression
+    - ~~Include calculator history in expression~~
     - ~~Parentheses~~

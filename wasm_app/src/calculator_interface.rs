@@ -212,7 +212,7 @@ impl Component for CalculatorBase {
                 let mut new_content = symbol;
                 
                 let parser = self.calculator.parser();
-                let interpreter = self.calculator.interpreter();
+                //let interpreter = self.calculator.interpreter();
 
                 /*
                  * If buffer is empty, and history is not, and content is an infix or suffix operator,
