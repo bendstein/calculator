@@ -5,8 +5,8 @@
 
 use tauri::{Manager, LogicalSize};
 
-const WIDTH: i32 = 500;
-const HEIGHT: i32 = 700;
+const WIDTH: i32 = 400;
+const HEIGHT: i32 = 500;
 
 fn main() -> Result<(), tauri::Error> {
   let builder = tauri::Builder::default()

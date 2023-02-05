@@ -226,13 +226,13 @@ impl Component for CalculatorBase {
                     else if parser.parse_expression::<calculator_parser::expression::UnopSuffix>(new_content.as_str()).is_ok() {
                         new_content = format!("$0{new_content}");
                     }
-                    else if let Ok(id) = parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()) {
-                        let func = interpreter.get_func_by_name(id.value.as_str());
+                    // else if let Ok(id) = parser.parse_expression::<calculator_parser::expression::IdToken>(new_content.as_str()) {
+                    //     let func = interpreter.get_func_by_name(id.value.as_str());
 
-                        if func.is_some() {
-                            new_content = format!("$0 {new_content} ");
-                        }
-                    }
+                    //     if func.is_some() {
+                    //         new_content = format!("$0 {new_content} ");
+                    //     }
+                    // }
                 }
                 /*
                  * If buffer isn't empty, and appending to end of buffer, and content is an infix operator,
@@ -483,14 +483,14 @@ impl Component for CalculatorBase {
                         <tr>
                             <td><CalculatorButton display="(" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("("), true))} /></td>
                             <td><CalculatorButton display=")" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from(")"), true))} /></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <td><CalculatorButton display="(x)" callback_click={ctx.link().callback(move |_| CalculatorAction::Surround { prefix: None, open: String::from("("), close: Some(String::from(")")), suffix: None, preview: true })} /></td>
+                            <td><CalculatorButton display="$" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("$"), true))} /></td>
+                            <td><CalculatorButton display="$m" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("$m"), true))} /></td>
+                            <td><CalculatorButton display=":" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from(":"), true))} /></td>
                         </tr>
                         <tr>
                             <td><CalculatorButton display="|x|" callback_click={ctx.link().callback(move |_| CalculatorAction::Surround { prefix: Some(String::from("abs")), open: String::from("("), close: Some(String::from(")")), suffix: None, preview: true })} /></td>
-                            <td><CalculatorButton display="(x)" callback_click={ctx.link().callback(move |_| CalculatorAction::Surround { prefix: None, open: String::from("("), close: Some(String::from(")")), suffix: None, preview: true })} /></td>
+                            <td><CalculatorButton display="-x" callback_click={ctx.link().callback(move |_| CalculatorAction::Surround { prefix: Some(String::from("-")), open: String::from("("), close: Some(String::from(")")), suffix: None, preview: true })} /></td>
                             <td><CalculatorButton display="^" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("^"), true))} /></td>
                             <td><CalculatorButton display="%" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("%"), true))} /></td>
                             <td><CalculatorButton display="!" callback_click={ctx.link().callback(move |_| CalculatorAction::Insert(String::from("!"), true))} /></td>
